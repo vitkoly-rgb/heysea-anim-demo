@@ -1,0 +1,37 @@
+/* ==========================================================================
+   06 · CTA orbits
+   ========================================================================== */
+.cta{
+  --cta-bg:var(--navy); --cta-dim:rgba(255,255,255,.32);
+  position:relative; overflow:hidden; background:var(--cta-bg); color:#fff;
+  min-height:100vh; min-height:100svh; display:flex; align-items:center; justify-content:center;
+}
+.cta .demo-label{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
+.cta-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cta-inner{position:relative;z-index:1;text-align:center;padding:96px 0}
+
+.cta-eyebrow{margin:0 0 18px;font:400 12px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.cta-title{margin:0;font:300 clamp(30px,4.2vw,64px)/1.15 var(--font);letter-spacing:-.015em}
+.cta-em{
+  font-family:var(--serif); font-style:italic; font-weight:400; letter-spacing:0;
+  /* Text fill: two-stop gradient, position driven by --fill (0..1) from JS/ScrollTrigger */
+  --fill:0;
+  background:linear-gradient(90deg,#fff 0 50%,var(--cta-dim) 50% 100%);
+  background-size:200% 100%; background-position:calc(100% - var(--fill) * 100%) 0;
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  padding:0 .06em .08em 0; /* keep the italic overhang inside the clip */
+}
+.cta-text{margin:22px auto 0;max-width:460px;font-size:16px;line-height:1.55;color:rgba(255,255,255,.66)}
+
+.cta-btn{
+  display:inline-flex; align-items:center; gap:10px; margin-top:32px; padding:10px 4px;
+  color:#fff; text-decoration:none; font-size:14px; letter-spacing:.01em;
+  border-bottom:1px solid rgba(255,255,255,.35); transition:border-color .3s;
+}
+.cta-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s cubic-bezier(.3,1.5,.5,1)}
+.cta-btn:hover{border-color:#fff}
+.cta-btn:hover svg,.cta-btn:focus-visible svg{transform:translateX(5px)}
+.cta-btn:focus-visible{outline:2px solid #fff;outline-offset:4px}
+
+@media (prefers-reduced-motion:reduce){ .cta-em{--fill:1} }
+@media (max-width:767px){ .cta-inner{padding:88px 0 72px} .cta-title{font-size:30px} }

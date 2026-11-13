@@ -1,0 +1,36 @@
+/* ===== 09 · QR columns — horizontal scroll (Figma 970:59416) ===== */
+.qr { --qr-edge: max(16px, (100vw - 1280px) / 2); --qr-size: 150px; --qr-gap: 100px; --qr-col-h: 350px; background: #fff; color: #111; overflow: hidden; }
+.qr__inner { padding: clamp(72px, 10vh, 110px) 0 clamp(48px, 7vh, 80px); }
+.qr__head { width: min(1280px, 100% - 32px); margin: 0 auto clamp(36px, 5vh, 52px); }
+.qr__eyebrow { margin: 0 0 14px; font: 400 12px/1 var(--font); letter-spacing: .02em; text-transform: uppercase; color: #111; }
+.qr__title { margin: 0; max-width: 420px; font: 400 clamp(26px, 2.05vw, 30px)/1.22 var(--font); color: #111; letter-spacing: -.005em; }
+
+/* Default = native horizontal swipe (mobile, no-JS fallback) */
+.qr__viewport { overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--qr-edge); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.qr__viewport::-webkit-scrollbar { display: none; }
+.qr__track { list-style: none; margin: 0; padding: 40px var(--qr-edge) 40px; display: flex; gap: var(--qr-gap); width: max-content; }
+
+/* Column: fixed height, the two blocks pushed to top and bottom (zig-zag via order) */
+.qr__col { flex: 0 0 var(--qr-size); height: var(--qr-col-h); display: flex; flex-direction: column; justify-content: space-between; scroll-snap-align: start; }
+.qr__col--even .qr__desc { order: -1; } /* even: text on top, QR at the bottom */
+.qr__fig { display: block; color: inherit; text-decoration: none; translate: 0 var(--dy, 0px); outline-offset: 6px; }
+.qr__fig:focus-visible { outline: 2px solid var(--navy); }
+.qr__code { width: var(--qr-size); height: var(--qr-size); color: #000; }
+.qr__name { display: block; margin-top: 12px; padding-left: 4px; font: 400 12px/1 var(--font); letter-spacing: .02em; text-transform: uppercase; }
+.qr__desc { margin: 0; font-size: 14px; line-height: 1.5; color: #111; max-width: var(--qr-size); }
+
+/* Desktop pinned mode (JS adds .qr--pinned) */
+.qr--pinned { height: 100vh; }
+.qr--pinned .qr__inner { height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 48px 0 0; }
+.qr--pinned .qr__viewport { overflow: visible; scroll-snap-type: none; }
+.qr--pinned .qr__track { will-change: transform; }
+
+@media (max-width: 767px) {
+  .qr { --qr-size: 132px; --qr-gap: 44px; --qr-col-h: 340px; }
+  .qr__desc { font-size: 13px; }
+}
+/* Reduced motion on desktop: static wrap, no horizontal movement */
+@media (prefers-reduced-motion: reduce) and (min-width: 768px) {
+  .qr__viewport { overflow: visible; }
+  .qr__track { width: min(1280px, 100% - 32px); margin: 0 auto; padding-inline: 0; flex-wrap: wrap; row-gap: 56px; }
+}

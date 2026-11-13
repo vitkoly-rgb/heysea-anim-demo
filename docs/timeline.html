@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HeySea — animation demos</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/css/base.css?v=1794562012">
+<link rel="stylesheet" href="assets/css/timeline.css?v=1794569622">
+</head>
+<body>
+<nav class="demo-nav" aria-label="Demos">
+  <a href="index.html"><strong>HeySea · demos</strong></a>
+  <a href="timeline.html">timeline</a></nav>
+<main>
+<!-- ===== timeline ===== -->
+<section id="timeline" class="demo-sec tl" data-autoplay="8000" data-start="0" aria-roledescription="timeline" aria-label="Brand history">
+  <span class="demo-label">03 · Timeline compass</span>
+
+  <div class="tl-stage">
+    <!-- Dial: static ring + rotating ticks/years. Center sits behind the text column (as in the design). -->
+    <div class="tl-dial" tabindex="0" role="slider"
+         aria-label="Year" aria-valuemin="2008" aria-valuemax="2025"
+         aria-valuenow="2008" aria-valuetext="2008">
+      <svg class="tl-ring" viewBox="-500 -500 1000 1000" aria-hidden="true" focusable="false">
+        <defs>
+          <!-- Static fade: the ring dissolves to the left so it reads as a partial arc behind the text. -->
+          <linearGradient id="tlFade" gradientUnits="userSpaceOnUse" x1="-500" y1="0" x2="500" y2="0">
+            <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+            <stop offset=".45" stop-color="#fff" stop-opacity=".35"/>
+            <stop offset=".8" stop-color="#fff" stop-opacity="1"/>
+          </linearGradient>
+          <mask id="tlMask" maskUnits="userSpaceOnUse" x="-500" y="-500" width="1000" height="1000">
+            <rect x="-500" y="-500" width="1000" height="1000" fill="url(#tlFade)"/>
+          </mask>
+        </defs>
+        <g mask="url(#tlMask)">
+          <circle class="tl-ring__band" r="390" />
+          <circle class="tl-ring__edge" r="355" />
+          <circle class="tl-ring__edge" r="425" />
+          <g class="tl-ring__ticks"><!-- filled by JS (keeps markup light) --></g>
+        </g>
+        <!-- Pointer: dot + shaft + arrow head, fixed at 3 o'clock -->
+        <g class="tl-pointer">
+          <circle r="9" cx="250" class="tl-pointer__dot"/>
+          <circle r="3.5" cx="250" class="tl-pointer__core"/>
+          <line x1="268" y1="0" x2="420" y2="0" class="tl-pointer__shaft"/>
+          <path d="M404 -9 L424 0 L404 9" class="tl-pointer__head"/>
+        </g>
+      </svg>
+
+      <ol class="tl-years" aria-hidden="true">
+                  <li><button type="button" class="tl-year" data-index="0" tabindex="-1">2008</button></li>
+                  <li><button type="button" class="tl-year" data-index="1" tabindex="-1">2009</button></li>
+                  <li><button type="button" class="tl-year" data-index="2" tabindex="-1">2010</button></li>
+                  <li><button type="button" class="tl-year" data-index="3" tabindex="-1">2011</button></li>
+                  <li><button type="button" class="tl-year" data-index="4" tabindex="-1">2012</button></li>
+                  <li><button type="button" class="tl-year" data-index="5" tabindex="-1">2013</button></li>
+                  <li><button type="button" class="tl-year" data-index="6" tabindex="-1">2014</button></li>
+                  <li><button type="button" class="tl-year" data-index="7" tabindex="-1">2015</button></li>
+                  <li><button type="button" class="tl-year" data-index="8" tabindex="-1">2016</button></li>
+                  <li><button type="button" class="tl-year" data-index="9" tabindex="-1">2017</button></li>
+                  <li><button type="button" class="tl-year" data-index="10" tabindex="-1">2018</button></li>
+                  <li><button type="button" class="tl-year" data-index="11" tabindex="-1">2019</button></li>
+                  <li><button type="button" class="tl-year" data-index="12" tabindex="-1">2020</button></li>
+                  <li><button type="button" class="tl-year" data-index="13" tabindex="-1">2021</button></li>
+                  <li><button type="button" class="tl-year" data-index="14" tabindex="-1">2022</button></li>
+                  <li><button type="button" class="tl-year" data-index="15" tabindex="-1">2023</button></li>
+                  <li><button type="button" class="tl-year" data-index="16" tabindex="-1">2024</button></li>
+                  <li><button type="button" class="tl-year" data-index="17" tabindex="-1">2025</button></li>
+              </ol>
+
+      <!-- Big current year; on change it trades places with the ring label (shared-element flight, see JS) -->
+      <div class="tl-big" aria-hidden="true"><span class="tl-big__txt">2008</span></div>
+    </div>
+
+    <div class="container tl-grid">
+      <div class="tl-copy">
+        <p class="tl-eyebrow">Our story</p>
+        <h2 class="tl-heading">From new deliveries to <em>international boat shows</em></h2>
+
+        <div class="tl-texts" aria-live="polite">
+                      <div class="tl-text is-active" data-index="0">
+              <span class="visually-hidden">2008: </span><p>Heysea is founded in Guangdong by a small team of naval engineers with a single 20-metre mould and a big idea: build yachts the way shipyards build ships.</p>
+            </div>
+                      <div class="tl-text" data-index="1" aria-hidden="true">
+              <span class="visually-hidden">2009: </span><p>The first hull leaves the shed. The Heysea 62 is delivered to a private owner in Hong Kong and becomes the yard&#039;s calling card in the region.</p>
+            </div>
+                      <div class="tl-text" data-index="2" aria-hidden="true">
+              <span class="visually-hidden">2010: </span><p>A new 18,000 m² facility opens, adding an in-house carpentry workshop so every interior is built under the same roof as the hull.</p>
+            </div>
+                      <div class="tl-text" data-index="3" aria-hidden="true">
+              <span class="visually-hidden">2011: </span><p>Heysea signs its first dealer agreement in Australia and debuts at the Sanctuary Cove International Boat Show.</p>
+            </div>
+                      <div class="tl-text" data-index="4" aria-hidden="true">
+              <span class="visually-hidden">2012: </span><p>The Asteria line is launched — semi-displacement hulls tuned for long passages with low fuel burn.</p>
+            </div>
+                      <div class="tl-text" data-index="5" aria-hidden="true">
+              <span class="visually-hidden">2013: </span><p>Heysea achieves CE certification across its range, opening the door to European owners and charter fleets.</p>
+            </div>
+                      <div class="tl-text" data-index="6" aria-hidden="true">
+              <span class="visually-hidden">2014: </span><p>The 27-metre Asteria 88 is delivered, the largest composite yacht built by the yard at the time.</p>
+            </div>
+                      <div class="tl-text" data-index="7" aria-hidden="true">
+              <span class="visually-hidden">2015: </span><p>Infusion moulding becomes standard on every hull, cutting weight by up to 12% while improving structural consistency.</p>
+            </div>
+                      <div class="tl-text" data-index="8" aria-hidden="true">
+              <span class="visually-hidden">2016: </span><p>Heysea debuts at the Fort Lauderdale International Boat Show and appoints its first North American representative.</p>
+            </div>
+                      <div class="tl-text" data-index="9" aria-hidden="true">
+              <span class="visually-hidden">2017: </span><p>A dedicated R&amp;D centre opens, pairing CFD hull analysis with full-scale tank testing in partnership with a local university.</p>
+            </div>
+                      <div class="tl-text" data-index="10" aria-hidden="true">
+              <span class="visually-hidden">2018: </span><p>The 100th Heysea yacht is delivered. Owners from 14 countries join the celebration in Zhongshan.</p>
+            </div>
+                      <div class="tl-text" data-index="11" aria-hidden="true">
+              <span class="visually-hidden">2019: </span><p>Heysea unveils its first steel-and-aluminium superyacht project, a 43-metre tri-deck built to class.</p>
+            </div>
+                      <div class="tl-text" data-index="12" aria-hidden="true">
+              <span class="visually-hidden">2020: </span><p>Remote commissioning and virtual sea trials keep deliveries on schedule while borders are closed.</p>
+            </div>
+                      <div class="tl-text" data-index="13" aria-hidden="true">
+              <span class="visually-hidden">2021: </span><p>The Vista series launches with hybrid propulsion options and a redesigned, light-flooded main deck.</p>
+            </div>
+                      <div class="tl-text" data-index="14" aria-hidden="true">
+              <span class="visually-hidden">2022: </span><p>Heysea returns to Cannes Yachting Festival with three yachts in the water and a sold-out order book for the season.</p>
+            </div>
+                      <div class="tl-text" data-index="15" aria-hidden="true">
+              <span class="visually-hidden">2023: </span><p>The first New Energy catamaran prototype completes 1,200 nm of open-water testing on solar and battery power alone.</p>
+            </div>
+                      <div class="tl-text" data-index="16" aria-hidden="true">
+              <span class="visually-hidden">2024: </span><p>Heysea enters the explorer-yacht segment, signing its first European contract for a 35-metre Explorer — delivery set for 2028. The Seaview 60, Heysea&#039;s New Energy catamaran, crosses to Europe for its official debut at the International Multihull Show.</p>
+            </div>
+                      <div class="tl-text" data-index="17" aria-hidden="true">
+              <span class="visually-hidden">2025: </span><p>A second yard opens on the Pearl River estuary, doubling capacity for 30–50 metre custom builds.</p>
+            </div>
+                  </div>
+
+        <div class="tl-controls">
+          <div class="tl-counter" aria-hidden="true">
+            <span class="tl-counter__num"><span class="tl-counter__cur">1</span><span class="tl-counter__tot">/18</span></span>
+            <span class="tl-progress"><span class="tl-progress__bar"></span></span>
+          </div>
+          <div class="tl-arrows">
+            <button type="button" class="tl-btn tl-prev" aria-label="Previous year">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg>
+            </button>
+            <button type="button" class="tl-btn tl-next" aria-label="Next year">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a class="tl-skip" href="timeline-after.html">Skip Timeline <span aria-hidden="true">›</span></a>
+  </div>
+</section>
+<div id="timeline-after" class="demo-spacer" tabindex="-1">↓ after timeline</div>
+<footer class="demo-end"><p>End of demos</p></footer>
+</main>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/SplitText.min.js"></script>
+<script src="vendor/MotionPathPlugin.min.js"></script>
+<script src="vendor/Observer.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
+<script src="vendor/d3-array.min.js"></script>
+<script src="vendor/d3-geo.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script src="assets/js/base.js?v=1794562012"></script>
+<script src="assets/js/timeline.js?v=1794569238"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HeySea — animation demos</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/css/base.css?v=1794562012">
+<link rel="stylesheet" href="assets/css/book.css?v=1794566070">
+</head>
+<body>
+<nav class="demo-nav" aria-label="Demos">
+  <a href="index.html"><strong>HeySea · demos</strong></a>
+  <a href="book.html">book</a></nav>
+<main>
+<!-- ===== book ===== -->
+<section id="book" class="demo-sec book" aria-labelledby="book-title">
+  <div class="book__stage">
+    <span class="demo-label">05 · Book — pure CSS 3D, scroll-scrubbed</span>
+    <header class="book__head container">
+      <p class="book__eyebrow">Brochures</p>
+      <h2 class="book__title" id="book-title">A closer look at every model, brought to life.</h2>
+    </header>
+
+    <!-- Сцена: .book — це «права сторінка»; все інше позиціонується відносно неї в 3D -->
+    <div class="book__scene" role="img" aria-label="HeySea brochure: Asteria, Solara">
+      <div class="book__obj">
+        <div class="book__back"></div>
+        <div class="book__lshadow"></div>
+        <div class="book__spine"><span>HeySea · Yacht Collection 2026</span></div>
+        <div class="book__edge book__edge--side"></div>
+        <div class="book__edge book__edge--top"></div>
+
+        <!-- Нижній шар: права сторінка 2-го розвороту (статична) -->
+        <div class="book__leaf book__leaf--base">
+          <div class="face face--front">  <div class="pg pg--right">
+    <p class="pg__lead">Solara is the sun-seeker of the range: fast, light and wrapped in glass so the sea is always in view.</p>
+    <div class="pg__cols"><p>A hydraulic swim platform, foredeck sun pads and an open-plan saloon make her the natural choice for Mediterranean summers.</p><p>A hydraulic swim platform, foredeck sun pads and an open-plan saloon make her the natural choice for Mediterranean summers.</p></div>
+    <div class="pg__thumbs">
+      <img src="assets/img/photo-6.jpg" alt="" loading="lazy" decoding="async"><img src="assets/img/photo-3.jpg" alt="" loading="lazy" decoding="async"><img src="assets/img/photo-1.jpg" alt="" loading="lazy" decoding="async">    </div>
+    <dl class="pg__specs">
+      <div><dt>Length</dt><dd>28 m</dd></div><div><dt>Guests</dt><dd>8</dd></div><div><dt>Cabins</dt><dd>4</dd></div><div><dt>Speed</dt><dd>32 kn</dd></div>    </dl>
+  </div>
+</div>
+        </div>
+
+        <!-- Тіні від аркуша, що перегортається (на праву й ліву сторінки) -->
+        <div class="book__cast book__cast--r"></div>
+        <div class="book__cast book__cast--l"></div>
+
+        <!-- Аркуш: лице = права сторінка розвороту 1, зворот = ліва сторінка розвороту 2 -->
+        <div class="book__leaf book__leaf--page" data-depth="1">
+          <div class="face face--front">  <div class="pg pg--right">
+    <p class="pg__lead">Built for long passages and quiet anchorages, Asteria pairs an ocean-going hull with interiors that feel like a private residence.</p>
+    <div class="pg__cols"><p>Full-beam owner’s suite, a beach club at the waterline and a flybridge lounge that opens to the horizon. Every surface is finished by hand in our Guangdong yard.</p><p>Full-beam owner’s suite, a beach club at the waterline and a flybridge lounge that opens to the horizon. Every surface is finished by hand in our Guangdong yard.</p></div>
+    <div class="pg__thumbs">
+      <img src="assets/img/photo-1.jpg" alt="" loading="lazy" decoding="async"><img src="assets/img/photo-3.jpg" alt="" loading="lazy" decoding="async"><img src="assets/img/photo-4.jpg" alt="" loading="lazy" decoding="async">    </div>
+    <dl class="pg__specs">
+      <div><dt>Length</dt><dd>42 m</dd></div><div><dt>Guests</dt><dd>12</dd></div><div><dt>Cabins</dt><dd>6</dd></div><div><dt>Range</dt><dd>4,500 nm</dd></div>    </dl>
+  </div>
+</div>
+          <div class="face face--back">  <div class="pg pg--left">
+    <p class="pg__kicker">Sport Fly · 28 m</p>
+    <h3 class="pg__title">Solara</h3>
+    <img class="pg__hero" src="assets/img/photo-5.jpg" alt="" loading="lazy" decoding="async">
+    <p class="pg__folio">Solara — HeySea</p>
+  </div>
+</div>
+        </div>
+
+        <!-- Обкладинка: лице = cover, зворот = ліва сторінка розвороту 1 -->
+        <div class="book__leaf book__leaf--cover" data-depth="2">
+          <div class="face face--front cover">
+            <img class="cover__img" src="assets/img/photo-2.jpg" alt="">
+            <div class="cover__text">
+              <p class="cover__brand">HeySea</p>
+              <p class="cover__title">Asteria</p>
+              <p class="cover__edition">Yacht Collection 2026</p>
+            </div>
+          </div>
+          <div class="face face--back">  <div class="pg pg--left">
+    <p class="pg__kicker">Explorer · 42 m</p>
+    <h3 class="pg__title">Asteria</h3>
+    <img class="pg__hero" src="assets/img/photo-2.jpg" alt="" loading="lazy" decoding="async">
+    <p class="pg__folio">Asteria — HeySea</p>
+  </div>
+</div>
+        </div>
+      </div>
+    </div>
+
+    <a class="book__cta" href="book.html">
+      <span>Download brochure</span><small>PDF · 12 MB</small>
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2v9m0 0 4-4m-4 4L4 7M3 14h10" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+    </a>
+  </div>
+</section>
+<div class="demo-spacer">↓</div>
+<footer class="demo-end"><p>End of demos</p></footer>
+</main>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/SplitText.min.js"></script>
+<script src="vendor/MotionPathPlugin.min.js"></script>
+<script src="vendor/Observer.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
+<script src="vendor/d3-array.min.js"></script>
+<script src="vendor/d3-geo.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script src="assets/js/base.js?v=1794562012"></script>
+<script src="assets/js/book.js?v=1794565908"></script>
+</body>
+</html>

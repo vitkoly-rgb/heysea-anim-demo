@@ -1,0 +1,24 @@
+/* ===== 00 · Our yachts — depth fly-through (Figma 2065:21717) ===== */
+/* Title is drawn with mix-blend-mode:difference: the colour we set = background − wanted colour,
+   so on the light background it reads as navy/grey and over a photo it turns into its "negative". */
+.oy {
+  --oy-bg: #f7f9fb;
+  --oy-ink: rgb(233 220 205);   /* → #0e1d2e navy on --oy-bg */
+  --oy-grey: rgb(74 70 65);     /* → #adb3ba light grey on --oy-bg */
+  --oy-eyebrow: rgb(109 105 98);/* → #8a9099 */
+  background: var(--oy-bg);
+}
+.oy__stage { position: relative; height: 100vh; height: 100svh; overflow: hidden; background: var(--oy-bg); isolation: isolate; }
+.oy__photos { position: absolute; inset: 0; }
+.oy__ph { position: absolute; left: 0; top: 0; object-fit: cover; transform-origin: 50% 50%; will-change: transform, opacity; opacity: 0; backface-visibility: hidden; }
+
+.oy__text { position: absolute; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 16px 64px; mix-blend-mode: difference; pointer-events: none; }
+.oy__eyebrow { margin: 0 0 14px; font: 400 13px/1 var(--font); letter-spacing: .02em; text-transform: uppercase; color: var(--oy-eyebrow); }
+.oy__title { margin: 0; font: 400 clamp(30px, 2.95vw, 44px)/1.22 var(--font); letter-spacing: -.01em; color: var(--oy-ink); }
+.oy__line { display: block; }
+.oy__it { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: 0; }
+.oy__fill .char { color: var(--oy-grey); }
+
+@media (max-width: 767px) {
+  .oy__title { font-size: clamp(28px, 8.4vw, 36px); }
+}

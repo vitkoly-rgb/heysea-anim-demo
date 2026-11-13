@@ -1,0 +1,64 @@
+/* ===== 02 · Before / after deck plan ===== */
+.ba { padding: clamp(80px, 12vh, 140px) 0; background: #fff; }
+.ba__head { text-align: center; max-width: 760px; margin: 0 auto 28px; }
+.ba__eyebrow { margin: 0 0 14px; font: 600 11px/1 var(--font); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.ba__title { margin: 0; font: 400 clamp(26px, 3.2vw, 40px)/1.15 var(--font); color: var(--ink); letter-spacing: -.01em; }
+.ba__title strong { font-weight: 600; color: var(--navy); }
+.ba__lead { margin: 14px auto 0; max-width: 520px; color: #666; font-size: 15px; }
+
+/* Tabs */
+.ba__tabs { display: flex; justify-content: center; gap: clamp(14px, 3vw, 40px); margin: 0 auto 22px; border-bottom: 1px solid var(--line); width: fit-content; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.ba__tab { position: relative; appearance: none; border: 0; background: none; padding: 12px 2px; font: 500 14px/1 var(--font); color: #8a9097; cursor: pointer; white-space: nowrap; }
+.ba__tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--navy); transform: scaleX(0); transition: transform .35s ease; }
+.ba__tab.is-active { color: var(--navy); }
+.ba__tab.is-active::after { transform: scaleX(1); }
+.ba__tab:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; border-radius: 2px; }
+
+/* Compare area */
+.ba__compare { position: relative; aspect-ratio: 1170 / 380; border-radius: 6px; overflow: hidden; background: #f4f0e6; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: ew-resize; box-shadow: 0 0 0 1px var(--line); }
+.ba__deck { position: absolute; inset: 0; opacity: 0; transition: opacity .55s ease; }
+.ba__deck.is-active { opacity: 1; }
+.ba__deck[hidden] { display: block; visibility: hidden; } /* keep layout; JS crossfades */
+.ba__layer { position: absolute; inset: 0; }
+.ba__layer--layout { clip-path: inset(0 0 0 var(--pos)); -webkit-clip-path: inset(0 0 0 var(--pos)); }
+.ba__svg { width: 100%; height: 100%; }
+
+/* Sketch look */
+.ba__svg--sketch .ba__bg { fill: #f4f0e6; }
+.ba__svg--sketch .ba__hull, .ba__svg--sketch .ba__deckline { fill: none; stroke: #2e2d2a; stroke-width: 2; stroke-linejoin: round; }
+.ba__svg--sketch .ba__deckline { stroke-width: 1.2; }
+.ba__svg--sketch .ba__shapes > * { stroke: #3a3833; stroke-width: 1.5; stroke-linejoin: round; }
+.ba__svg--sketch .ba__ghost { opacity: .35; }
+.ba__svg--sketch .ba__ghost .ba__labels { display: none; }
+.ba__svg--sketch .ba__labels text { font: italic 15px var(--serif); fill: #4b4840; }
+.ba__construct { fill: none; stroke: #b9b2a2; stroke-width: 1; stroke-dasharray: 8 6; }
+
+/* Layout look */
+.ba__svg--layout .ba__bg { fill: #dfe9f0; }
+.ba__svg--layout .ba__hull { fill: #fff; stroke: var(--navy); stroke-width: 2.4; }
+.ba__svg--layout .ba__deckline { fill: #f7f3ea; stroke: rgba(11,42,74,.35); stroke-width: 1; }
+.ba__svg--layout .ba__labels text { font: 600 11px var(--font); letter-spacing: .08em; text-transform: uppercase; fill: var(--navy); }
+.ba__svg--layout .ba__labels text.on-dark { fill: #fff; }
+.is-portrait .ba__svg--layout .ba__labels text { font-size: 22px; }
+.is-portrait .ba__svg--sketch .ba__labels text { font-size: 26px; }
+
+/* Chips */
+.ba__chip { position: absolute; top: 14px; z-index: 3; padding: 7px 10px; border-radius: 999px; font: 600 11px/1 var(--font); letter-spacing: .12em; text-transform: uppercase; pointer-events: none; transition: opacity .25s; }
+.ba__chip--left { left: 14px; background: rgba(255,255,255,.8); color: #3a3833; }
+.ba__chip--right { right: 14px; background: var(--navy); color: #fff; }
+
+/* Divider + knob */
+.ba__handle { position: absolute; top: 0; bottom: 0; left: var(--pos); z-index: 4; width: 44px; margin-left: -22px; display: grid; place-items: center; cursor: ew-resize; outline: none; }
+.ba__handle::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 0 1px rgba(11,42,74,.25); }
+.ba__knob { position: relative; width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--navy); display: grid; place-items: center; box-shadow: 0 4px 16px rgba(11,42,74,.25); transition: transform .2s ease; }
+.ba__handle:hover .ba__knob, .ba.is-dragging .ba__knob { transform: scale(1.08); }
+.ba__handle:focus-visible .ba__knob { box-shadow: 0 0 0 3px var(--navy), 0 4px 16px rgba(11,42,74,.25); }
+
+/* Mobile: plan is rotated to portrait by JS (bow up) so it stays readable */
+@media (max-width: 640px) {
+  .ba__compare.is-portrait { aspect-ratio: auto; height: min(72vh, 620px); }
+  .ba__tab { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ba__deck, .ba__tab::after, .ba__knob { transition: none; }
+}

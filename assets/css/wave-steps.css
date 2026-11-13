@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400&display=swap');
+/* ==========================================================================
+   07 · Wave steps (Ownership journey)
+   Nodes are positioned by JS via --xp / --yp (0..1 fractions of the wave box).
+   ========================================================================== */
+.ws{--ws-bg:#f7f9fb; --ws-ink:#0d1b2a; --ws-muted:#9aa1a8; --ws-line:#c4cad0; background:var(--ws-bg)}
+.ws-pin{min-height:100vh;display:flex;align-items:center;padding:96px 0 64px;background:var(--ws-bg)}
+.ws-inner{display:flex;flex-direction:column;align-items:center}
+
+.ws-head{text-align:center;max-width:640px}
+.ws-eyebrow{margin:0 0 14px;font:400 12px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:#8a9097}
+.ws-title{margin:0;font:400 clamp(28px,3.2vw,44px)/1.15 var(--font);letter-spacing:-.015em;color:var(--ws-ink)}
+.ws-title span{display:block}
+.ws-title span em{color:var(--ws-muted)}
+.ws-title em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:0}
+.ws-sub{margin:14px 0 0;font-size:13px;color:#6f7780}
+
+/* ---- Wave ---------------------------------------------------------------- */
+.ws-wave{position:relative;width:min(1100px,100%);margin-top:clamp(32px,6vh,72px)}
+.ws-svg{display:block;width:100%;height:auto;overflow:visible;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent)}
+.ws-track{fill:none;stroke:var(--ws-line);stroke-width:1.5;stroke-dasharray:2 7;stroke-linecap:round;vector-effect:non-scaling-stroke}
+/* NO vector-effect here: with non-scaling-stroke Chrome applies dasharray/dashoffset in SCREEN px, while the
+   lengths we compare (getTotalLength, node lengths) are in viewBox units → the drawn line ran ahead of the
+   nodes by the viewBox scale (≈9% at 1440, 25% at 375). Stroke width is set in user units by JS instead. */
+.ws-progress{fill:none;stroke:var(--ws-ink);stroke-linecap:butt}
+
+.ws-nodes{list-style:none;margin:0;padding:0}
+.ws-node{
+  position:absolute; left:calc(var(--xp,0) * 100%); top:calc(var(--yp,0) * 100%);
+  width:0; height:0; display:flex; flex-direction:column; align-items:center;
+}
+.ws-node__circle{
+  position:relative; flex:none; width:44px; height:44px; margin-top:-22px; border-radius:50%;
+  display:grid; place-items:center; background:var(--ws-bg); border:1px solid var(--ws-line); color:#8a929a;
+  transition:background-color .35s, border-color .35s, color .35s, transform .35s cubic-bezier(.3,1.6,.5,1);
+}
+.ws-node__circle svg{grid-area:1/1;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;transition:opacity .3s, transform .35s}
+.ws-node__check{opacity:0;transform:scale(.5)}
+.ws-node__circle::after{ /* pulse ring on the current stage */
+  content:""; position:absolute; inset:-1px; border-radius:50%; border:1px solid var(--ws-ink); opacity:0; pointer-events:none;
+}
+.ws-node__body{display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:14px;width:200px}
+.ws-node__label{font:500 13px/1.2 var(--font);color:var(--ws-muted);transition:color .3s}
+.ws-node__text{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap} /* visually hidden on desktop, read by SR */
+
+.ws-node.is-done .ws-node__circle,
+.ws-node.is-current .ws-node__circle{background:var(--ws-ink);border-color:var(--ws-ink);color:#fff}
+.ws-node.is-current .ws-node__circle{transform:scale(1.12)}
+.ws-node.is-current .ws-node__circle::after{animation:ws-pulse 1.8s ease-out infinite}
+.ws-node.is-done .ws-node__icon{opacity:0;transform:scale(.5)}
+.ws-node.is-done .ws-node__check{opacity:1;transform:none}
+.ws-node.is-done .ws-node__label,.ws-node.is-current .ws-node__label{color:var(--ws-ink)}
+@keyframes ws-pulse{0%{opacity:.5;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}
+
+/* ---- Caption (desktop) --------------------------------------------------- */
+.ws-captions{display:grid;width:min(520px,100%);margin-top:clamp(56px,9vh,96px);text-align:center}
+.ws-caption{grid-area:1/1;margin:0;font-size:15px;line-height:1.6;color:#4a525b}
+.ws:not(.is-ready) .ws-caption:not(.is-active){visibility:hidden;opacity:0}
+
+/* ---- Static (reduced motion): everything visible, captions under nodes --- */
+.ws.is-static .ws-captions{display:none}
+.ws.is-static .ws-node__text{position:static;width:auto;height:auto;clip:auto;white-space:normal;overflow:visible;margin-top:8px;font-size:13px;line-height:1.5;color:#4a525b}
+.ws.is-static .ws-wave{margin-bottom:180px}
+.ws.is-static .ws-node.is-current .ws-node__circle::after{animation:none}
+
+/* ---- Mobile: vertical wave on the left, text column on the right --------- */
+@media (max-width:767px){
+  .ws{--svgw:96px}
+  .ws-pin{align-items:flex-start;padding:80px 0 24px}
+  .ws-head{text-align:left}
+  .ws-inner{align-items:stretch}
+  .ws-title{font-size:28px}
+  .ws-wave{margin-top:12px}
+  .ws-svg{width:var(--svgw);-webkit-mask-image:linear-gradient(180deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(180deg,transparent,#000 7%,#000 93%,transparent)}
+  .ws-node{left:0;right:0;width:auto;flex-direction:row;align-items:flex-start}
+  .ws-node__circle{position:absolute;left:calc(var(--xp) * var(--svgw));top:0;margin:-20px 0 0 -20px;width:40px;height:40px}
+  .ws-node__body{position:absolute;left:calc(var(--svgw) + 20px);right:0;top:-12px;width:auto;margin:0;align-items:flex-start;text-align:left}
+  .ws-node__label{font-size:15px}
+  .ws-node__text{position:static;width:auto;height:auto;clip:auto;white-space:normal;overflow:visible;margin-top:6px;font-size:13px;line-height:1.45;color:#4a525b;opacity:.35;transition:opacity .4s}
+  .ws-node.is-current .ws-node__text{opacity:1}
+  .ws-node.is-done .ws-node__text{opacity:.6}
+  .ws-captions{display:none}
+  .ws.is-static .ws-wave{margin-bottom:0}
+}

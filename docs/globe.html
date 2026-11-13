@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HeySea — animation demos</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/css/base.css?v=1794562012">
+<link rel="stylesheet" href="assets/css/globe.css?v=1794565680">
+</head>
+<body>
+<nav class="demo-nav" aria-label="Demos">
+  <a href="index.html"><strong>HeySea · demos</strong></a>
+  <a href="globe.html">globe</a></nav>
+<main>
+<!-- ===== globe ===== -->
+<section id="globe" class="demo-sec globe" aria-labelledby="globe-title">
+  <div class="globe__stage">
+    <span class="demo-label">04 · Globe — live d3-geo canvas, scroll-scrubbed</span>
+    <header class="globe__head container">
+      <p class="globe__eyebrow">Global Network</p>
+      <h2 class="globe__title" id="globe-title">A growing presence across key yachting markets worldwide.</h2>
+      <p class="globe__lead">Offices and partners in the regions where our owners cruise, berth and buy.</p>
+    </header>
+
+    <div class="globe__planet" aria-hidden="true">
+      <canvas class="globe__canvas"></canvas>
+      <div class="globe__markers">
+                <span class="globe-marker globe-marker--light" data-lat="26.36" data-lng="-80.08">
+          <i class="globe-marker__dot"></i>
+          <b class="globe-marker__label">Federal Highway, Boca Raton</b>
+        </span>
+                <span class="globe-marker globe-marker--light" data-lat="35.9" data-lng="14.5">
+          <i class="globe-marker__dot"></i>
+          <b class="globe-marker__label">Howard Street, Malta</b>
+        </span>
+                <span class="globe-marker globe-marker--dark" data-lat="23.1" data-lng="113.3">
+          <i class="globe-marker__dot"></i>
+          <b class="globe-marker__label">Guangdong Province, China</b>
+        </span>
+              </div>
+    </div>
+
+    <div class="globe__fade" aria-hidden="true"></div>
+
+    <!-- Доступний текстовий список офісів (маркери на глобусі декоративні) -->
+    <ul class="visually-hidden-globe">
+      <li>Federal Highway, Boca Raton</li><li>Howard Street, Malta</li><li>Guangdong Province, China</li>    </ul>
+
+    <dl class="globe__stats container">
+            <div class="globe-stat">
+        <dt class="globe-stat__value"><span data-count="15">15</span>+</dt>
+        <dd class="globe-stat__label">Countries Served</dd>
+      </div>
+            <div class="globe-stat">
+        <dt class="globe-stat__value"><span data-count="30">30</span>+</dt>
+        <dd class="globe-stat__label">Dealer &amp; Service Partners</dd>
+      </div>
+            <div class="globe-stat">
+        <dt class="globe-stat__value"><span data-count="4">4</span></dt>
+        <dd class="globe-stat__label">Continents</dd>
+      </div>
+          </dl>
+  </div>
+</section>
+<div class="demo-spacer">↓ next block: “Trusted Partners, Around the World”</div>
+<footer class="demo-end"><p>End of demos</p></footer>
+</main>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/SplitText.min.js"></script>
+<script src="vendor/MotionPathPlugin.min.js"></script>
+<script src="vendor/Observer.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
+<script src="vendor/d3-array.min.js"></script>
+<script src="vendor/d3-geo.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script src="assets/js/base.js?v=1794562012"></script>
+<script src="assets/js/globe.js?v=1794565722"></script>
+</body>
+</html>

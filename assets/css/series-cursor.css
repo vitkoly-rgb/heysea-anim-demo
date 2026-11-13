@@ -1,0 +1,41 @@
+/* ===== 01 · Series slider + water cursor ===== */
+.sc { background: #000; color: #fff; }
+.sc .demo-label { z-index: 20; }
+
+/* Default (no JS / reduced motion): panels simply stack, one viewport each. */
+.sc__stage { position: relative; }
+.sc__panel { position: relative; height: 100vh; height: 100svh; overflow: hidden; background: #000; }
+
+/* JS-enhanced: all panels stacked in one pinned viewport. */
+.sc--pinned .sc__stage { height: 100vh; height: 100svh; overflow: hidden; }
+.sc--pinned .sc__panel { position: absolute; inset: 0; will-change: transform; }
+
+.sc__media { position: absolute; inset: 0; transform-origin: 50% 30%; will-change: transform; }
+.sc__video { width: 100%; height: 100%; object-fit: cover; }
+/* Darkening overlay of the panel being covered (animated by JS) + permanent bottom gradient for legibility */
+.sc__media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.55)); pointer-events: none; }
+.sc__shade { position: absolute; inset: 0; background: #000; opacity: 0; z-index: 1; }
+
+.sc__copy { position: absolute; left: clamp(16px, 4vw, 64px); right: clamp(16px, 4vw, 64px); bottom: clamp(28px, 6vh, 72px); z-index: 2; max-width: 980px; }
+.sc__count { margin: 0 0 12px; font: 500 12px/1 var(--font); letter-spacing: .14em; opacity: .75; }
+.sc__title { margin: 0; font: italic 400 clamp(48px, 8.5vw, 132px)/.95 var(--serif); letter-spacing: -.01em; }
+.sc__title .line { overflow: hidden; padding-bottom: .08em; }
+.sc__text { margin: 16px 0 0; max-width: 440px; font-size: 15px; line-height: 1.5; opacity: .85; }
+.sc__cta { display: inline-flex; gap: 8px; margin-top: 18px; color: #fff; font: 600 12px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.5); padding-bottom: 6px; }
+.sc__cta:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+
+/* Touch badge (bottom-right) */
+.sc__badge { position: absolute; right: 16px; bottom: 24px; z-index: 6; display: none; align-items: center; gap: 10px; color: #fff; font: 500 12px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; pointer-events: none; }
+@media (hover: none), (pointer: coarse) { .sc__badge { display: inline-flex; } }
+
+/* ----- Custom cursor (fine pointers only) ----- */
+.sc-cursor { position: fixed; left: 0; top: 0; z-index: 900; display: none; align-items: center; gap: 12px; pointer-events: none; opacity: 0; transition: opacity .25s ease; will-change: transform; }
+.sc-cursor__water { width: 64px; height: 64px; filter: drop-shadow(0 0 6px rgba(0,0,0,.28)); } /* keeps the white ring readable over bright footage */
+.sc-cursor__label { color: #fff; font: 500 14px/1 var(--font); letter-spacing: .06em; text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,.25); }
+.sc-cursor.is-visible { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .sc-cursor { display: flex; }
+  .sc--cursor .sc__stage, .sc--cursor .sc__stage * { cursor: none; }
+  /* keep the real cursor over interactive text so links stay obvious */
+  .sc--cursor .sc__cta { cursor: pointer; }
+}

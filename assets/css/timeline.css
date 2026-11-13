@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400&display=swap');
+/* ==========================================================================
+   03 · Timeline compass
+   Geometry is driven by two custom props on .tl-dial:
+     --W  : dial box size (ring band radius = 0.39 * W, see SVG viewBox units /1000)
+     --cx : horizontal position of the dial center inside the stage
+   ========================================================================== */
+.tl{
+  --tl-ink:#0d1b2a; --tl-muted:#a9afb6; --tl-ring:#eceff3; --tl-bg:#f7f9fb;
+  overflow:hidden; background:var(--tl-bg);
+}
+.tl .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.tl-stage{position:relative;min-height:max(100vh,680px);display:flex;align-items:center}
+
+/* ---- Dial ---------------------------------------------------------------- */
+.tl-dial{
+  --W:min(96vh,62vw,900px); --cx:36%;
+  position:absolute; top:50%; left:var(--cx);
+  width:var(--W); aspect-ratio:1; margin:calc(var(--W) / -2) 0 0 calc(var(--W) / -2);
+  border-radius:50%; outline:none; touch-action:pan-y; cursor:grab; user-select:none; -webkit-user-select:none;
+}
+.tl-dial.is-dragging{cursor:grabbing}
+.tl-dial:focus-visible .tl-pointer__dot{stroke:var(--navy);stroke-width:3}
+.tl-ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.tl-ring__band{fill:none;stroke:var(--tl-ring);stroke-width:70}
+.tl-ring__edge{fill:none;stroke:#e2e5e8;stroke-width:1}
+.tl-ring__ticks line{stroke:#cfd4d9;stroke-width:1.2;vector-effect:non-scaling-stroke}
+.tl-ring__ticks line.is-major{stroke:#9aa2ab;stroke-width:1.6}
+.tl-pointer__dot{fill:var(--tl-bg);stroke:var(--tl-ink);stroke-width:2;vector-effect:non-scaling-stroke}
+.tl-pointer__core{fill:var(--tl-ink)}
+.tl-pointer__shaft,.tl-pointer__head{fill:none;stroke:var(--tl-ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+
+/* Small years: absolutely positioned at the dial center, moved by JS (translate) */
+.tl-years{list-style:none;margin:0;padding:0}
+.tl-year{
+  position:absolute; left:50%; top:50%;
+  font:300 15px/1 var(--font); letter-spacing:.02em; color:#7d858e;
+  background:none; border:0; padding:6px 8px; margin:-14px 0 0 -22px; cursor:pointer;
+  will-change:transform,opacity;
+}
+.tl-year:hover{color:var(--tl-ink)}
+
+/* Big current year — placed just outside the ring at 3 o'clock */
+.tl-big{
+  position:absolute; top:50%; left:calc(50% + var(--W) * .455);
+  transform:translateY(-52%);
+  font:200 clamp(56px,8.4vw,128px)/1 var(--font); letter-spacing:-.02em; color:var(--tl-ink);
+  display:flex; white-space:nowrap; pointer-events:none; font-variant-numeric:tabular-nums;
+}
+.tl-big__txt{display:block;line-height:.84em} /* box hugs the digits → flyer centers line up */
+/* Flyer: clone of the big year that travels between the ring and the big slot */
+.tl-fly{
+  position:absolute; left:50%; top:50%; z-index:3; pointer-events:none; white-space:nowrap;
+  font-weight:200; font-family:var(--font); line-height:.84em; letter-spacing:-.02em; font-variant-numeric:tabular-nums;
+  transform-origin:50% 50%; will-change:transform,opacity;
+}
+
+/* ---- Copy column --------------------------------------------------------- */
+.tl-grid{position:relative;z-index:2;pointer-events:none}
+.tl-copy{width:min(400px,100%);pointer-events:auto}
+.tl-eyebrow{margin:0 0 14px;font:400 12px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:#8a9097}
+.tl-heading{font:400 clamp(24px,2.2vw,32px)/1.2 var(--font);letter-spacing:-.01em;margin:0 0 22px;color:var(--tl-ink)}
+.tl-heading em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:0;color:var(--tl-muted)}
+.tl-texts{display:grid}
+.tl-text{grid-area:1/1;font-size:14px;line-height:1.55;color:#4a525b}
+.tl-text p{margin:0}
+.tl:not(.is-ready) .tl-text:not(.is-active){visibility:hidden;opacity:0}
+
+.tl-controls{display:flex;align-items:flex-end;gap:16px;margin-top:40px}
+.tl-counter{flex:1;display:flex;flex-direction:column;gap:8px}
+.tl-counter__num{font:300 18px/1 var(--font);color:var(--tl-ink);font-variant-numeric:tabular-nums}
+.tl-counter__tot{color:var(--tl-muted)}
+.tl-counter__cur{display:inline-block}
+.tl-progress{position:relative;display:block;height:1px;background:var(--line)}
+.tl-progress__bar{position:absolute;inset:-0.5px 0;background:var(--tl-ink);transform-origin:0 50%;transform:scaleX(0)}
+.tl.is-paused .tl-progress__bar{background:#6d7680}
+.tl-arrows{display:flex;gap:8px}
+.tl-btn{
+  width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--tl-bg);color:var(--tl-ink);
+  display:grid;place-items:center;cursor:pointer;transition:border-color .2s,background .2s;
+}
+.tl-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.tl-btn:hover{border-color:var(--tl-ink)}
+.tl-btn:focus-visible,.tl-skip:focus-visible,.tl-year:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
+
+.tl-skip{
+  position:absolute; right:clamp(16px,6vw,96px); bottom:48px; z-index:3;
+  font-size:13px; color:var(--tl-ink); text-decoration:none;
+}
+.tl-skip:hover{text-decoration:underline}
+
+/* ---- Mobile: dial above, peeking from the left edge; copy below ---------- */
+@media (max-width:767px){
+  /* Pinned on mobile too → the whole stage must fit one screen (100svh). */
+  .tl-stage{display:block;min-height:100vh;min-height:100svh;padding:0 0 24px}
+  .tl-dial{--W:500px; --cx:-24px; top:250px}
+  .tl-big{font-size:52px;left:calc(50% + var(--W) * .45)}
+  .tl-year{font-size:13px}
+  .tl-grid{padding-top:480px}
+  .tl-copy{width:100%}
+  .tl-heading{font-size:22px;margin-bottom:14px}
+  .tl-text{font-size:13px}
+  .tl-controls{margin-top:20px}
+  .tl-skip{top:46px;bottom:auto;right:16px}
+}

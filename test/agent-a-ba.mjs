@@ -1,0 +1,32 @@
+// node test/agent-a-ba.mjs — drags the before/after divider, uses keyboard, switches tabs; screenshots.
+import { chromium } from 'playwright-core';
+const OUT = new URL('../shots/', import.meta.url).pathname;
+const browser = await chromium.launch({ channel: 'chrome' });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const errors = [];
+page.on('pageerror', (e) => errors.push(String(e)));
+await page.goto('http://localhost:8790/?only=before-after&lenis=0', { waitUntil: 'networkidle' });
+await page.evaluate(() => document.querySelector('.ba__compare').scrollIntoView({ block: 'center' }));
+await page.waitForTimeout(300);
+await page.screenshot({ path: OUT + 'before-after-hint-start.png' });
+await page.waitForTimeout(1800);
+const box = await page.locator('.ba__compare').boundingBox();
+await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2);
+await page.mouse.down();
+await page.mouse.move(box.x + box.width * 0.78, box.y + box.height / 2, { steps: 8 });
+await page.mouse.up();
+console.log('after drag aria-valuenow =', await page.getAttribute('.ba__handle', 'aria-valuenow'));
+await page.screenshot({ path: OUT + 'before-after-drag78.png' });
+await page.keyboard.press('ArrowLeft'); await page.keyboard.press('Shift+ArrowLeft');
+console.log('after keys aria-valuenow =', await page.getAttribute('.ba__handle', 'aria-valuenow'));
+await page.click('#ba-tab-main');
+await page.waitForTimeout(300);
+await page.screenshot({ path: OUT + 'before-after-tab-mid.png' });
+await page.waitForTimeout(900);
+console.log('after tab aria-valuenow =', await page.getAttribute('.ba__handle', 'aria-valuenow'));
+await page.screenshot({ path: OUT + 'before-after-main.png' });
+for (const id of ['upper', 'lower']) { await page.click('#ba-tab-' + id); await page.waitForTimeout(1300); await page.screenshot({ path: OUT + `before-after-${id}.png` }); }
+await page.focus('#ba-tab-lower'); await page.keyboard.press('Home'); await page.waitForTimeout(200);
+console.log('tab Home → selected:', await page.evaluate(() => document.querySelector('[aria-selected=true]').textContent));
+console.log(errors.length ? 'ERRORS:\n' + errors.join('\n') : 'no page errors');
+await browser.close();

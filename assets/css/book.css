@@ -1,0 +1,106 @@
+/* ===== 05 · Book (pure CSS 3D) ===== */
+.book {
+  /* Розміри сторінки — від них рахується все (і кегль тексту на сторінках) */
+  --ph: min(62vh, 540px);
+  --pw: calc(var(--ph) * .72);
+  --t: 14px;                       /* товщина блоку сторінок */
+  --paper: #fbfaf7;
+  --cy: 52%;                       /* вертикальний центр книги на сцені */
+  background: #fff;
+}
+.book__stage { position: relative; height: 100vh; height: 100svh; overflow: hidden; }
+
+.book__head { position: absolute; left: 0; right: 0; top: 20vh; text-align: center; will-change: filter, opacity; }
+.book__eyebrow { margin: 0 0 16px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.book__title { margin: 0 auto; max-width: 15em; font-weight: 400; font-size: clamp(28px, 4vw, 54px); line-height: 1.12; letter-spacing: -.02em; }
+
+/* 3D-сцена. Увага: на предках .book__obj НЕ можна filter/opacity<1/overflow — вони «сплющують» preserve-3d */
+.book__scene { position: absolute; inset: 0; perspective: 2200px; perspective-origin: 50% 40%; pointer-events: none; }
+.book__obj {
+  position: absolute; left: 50%; top: var(--cy);
+  width: var(--pw); height: var(--ph);
+  margin: calc(var(--ph) / -2) 0 0 calc(var(--pw) / -2);
+  transform-style: preserve-3d; -webkit-transform-style: preserve-3d;
+  will-change: transform;
+}
+.book__obj > * { position: absolute; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
+
+/* Задня обкладинка + грані (товщина) */
+.book__back { inset: 0; background: #1b2633; border-radius: 0 3px 3px 0; transform: translateZ(calc(var(--t) * -1)); box-shadow: 0 40px 70px -20px rgba(10, 20, 30, .45); }
+.book__spine { left: 0; top: 0; width: var(--t); height: 100%; background: linear-gradient(90deg, #142030, #24384d 50%, #142030); transform-origin: 0 50%; transform: rotateY(90deg); display: grid; place-items: center; overflow: hidden; }
+.book__spine span { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 7px/1 var(--font); letter-spacing: .2em; text-transform: uppercase; color: rgba(255, 255, 255, .6); white-space: nowrap; }
+.book__edge--side { left: 100%; top: 0; width: var(--t); height: 100%; transform-origin: 0 50%; transform: rotateY(90deg); background: repeating-linear-gradient(90deg, #f3f2ee 0 1px, #d9d7d0 1px 2px); }
+.book__edge--top { left: 0; top: 0; width: 100%; height: var(--t); transform-origin: 50% 0; transform: rotateX(-90deg); background: repeating-linear-gradient(0deg, #f3f2ee 0 1px, #d9d7d0 1px 2px); }
+
+/* Аркуші: обертаються навколо корінця (лівий край). transform задає JS: rotateY(a) translateZ(d) */
+.book__leaf { inset: 0; transform-origin: 0 50%; }
+.book__leaf--cover { transform: translateZ(2px); }
+.book__leaf--page  { transform: translateZ(1px); }
+.face { position: absolute; inset: 0; overflow: hidden; background: var(--paper); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.face--back { transform: rotateY(180deg); }
+/* ---- Curl: аркуш розрізаний JS-ом на N вертикальних смуг (вкладені, ланцюжок transform-origin) ----
+   .strip — 3D-контейнер (НЕ можна overflow/filter), кліпінг робить лише .face всередині (листовий елемент). */
+.strip { position: absolute; top: 0; left: 0; height: 100%; width: calc(var(--pw) / var(--n)); transform-origin: 0 50%; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
+.strip .strip { left: 100%; }
+.book__leaf.is-flat > .strip, .book__leaf.is-seg:not(.is-flat) > .face { visibility: hidden; }
+.strip > .face { inset: 0 -1px; }                  /* ±1px перекриття — без «волосяних» щілин на згинах */
+.strip .slice { position: absolute; top: 0; height: 100%; width: var(--pw); }
+/* Освітлення кожної смуги з JS: --s — затемнення (від кута до глядача), --h — блік на згині */
+.strip > .face::after, .strip > .face::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.strip > .face::after { background: #0b1420; opacity: var(--s, 0); }
+.strip > .face::before { background: #fff; opacity: var(--h, 0); }
+/* Тінь, яку аркуш кидає на сторінку під ним (права / ліва), масштабується з проєкцією аркуша */
+.book__cast { inset: 0; pointer-events: none; opacity: 0; transform-origin: 0 50%; }
+.book__cast--r { background: linear-gradient(90deg, rgba(10, 18, 28, .45), rgba(10, 18, 28, .12) 55%, rgba(10, 18, 28, 0)); transform: translateZ(.5px); }
+.book__cast--l { background: linear-gradient(90deg, rgba(10, 18, 28, .45), rgba(10, 18, 28, .12) 55%, rgba(10, 18, 28, 0)); transform: translateZ(-1.5px) rotateY(180deg); }
+.book__lshadow { inset: 0; opacity: 0; background: #1b2633; transform-origin: 0 50%; transform: translateZ(calc(var(--t) * -1)) rotateY(180deg); box-shadow: 0 40px 70px -20px rgba(10, 20, 30, .4); }  /* «дошка» під лівою стороною відкритої книги */
+
+/* Обкладинка */
+.cover { background: #0e1a26; color: #fff; border-radius: 0 3px 3px 0; }
+.cover__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cover::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(8, 18, 30, .55), rgba(8, 18, 30, 0) 45%, rgba(8, 18, 30, .35)); }
+.cover__text { position: absolute; z-index: 2; inset: 9% 9% auto; }
+.cover__brand { margin: 0; font: 600 calc(var(--pw) * .032)/1 var(--font); letter-spacing: .3em; text-transform: uppercase; }
+.cover__title { margin: .35em 0 0; font: 400 calc(var(--pw) * .16)/1 var(--serif); letter-spacing: -.01em; }
+.cover__edition { margin: .6em 0 0; font-size: calc(var(--pw) * .032); opacity: .8; }
+
+/* Сторінки розвороту (типографіка масштабується від --pw) */
+.pg { position: absolute; inset: 0; padding: 8% 8% 6%; font-size: calc(var(--pw) * .028); line-height: 1.45; color: #2b2f33; display: flex; flex-direction: column; }
+.pg--left { background: linear-gradient(270deg, rgba(0, 0, 0, .08), rgba(0, 0, 0, 0) 9%), var(--paper); }
+.pg--right { background: linear-gradient(90deg, rgba(0, 0, 0, .1), rgba(0, 0, 0, 0) 9%), var(--paper); }
+.pg__kicker { margin: 0; font-size: .85em; letter-spacing: .18em; text-transform: uppercase; color: #8a9096; }
+.pg__title { margin: .15em 0 .5em; font: 400 calc(var(--pw) * .14)/1 var(--serif); color: var(--navy); }
+.pg__hero { flex: 1; min-height: 0; width: 100%; object-fit: cover; }
+.pg__folio { margin: .9em 0 0; font-size: .8em; color: #9aa0a6; }
+.pg__lead { margin: 0 0 1em; font: 400 1.5em/1.3 var(--serif); color: #1c2125; }
+.pg__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6%; margin-bottom: 1em; }
+.pg__cols p { margin: 0; font-size: .9em; color: #5d646b; }
+.pg__thumbs { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; flex: 1; min-height: 0; }
+.pg__thumbs img { width: 100%; height: 100%; object-fit: cover; }
+.pg__thumbs img:first-child { grid-row: span 2; }
+.pg__specs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 1em 0 0; border-top: 1px solid #e3e1db; padding-top: .8em; }
+.pg__specs dt { font-size: .75em; letter-spacing: .1em; text-transform: uppercase; color: #9aa0a6; }
+.pg__specs dd { margin: .2em 0 0; font-weight: 600; color: var(--navy); }
+
+/* CTA */
+.book__cta {
+  position: absolute; left: 50%; top: calc(var(--cy) + var(--ph) / 2 + 28px); transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px;
+  background: var(--navy); color: #fff; text-decoration: none; font-size: 14px; font-weight: 500; white-space: nowrap;
+  opacity: 0; visibility: hidden;
+}
+.book__cta small { font-size: 11px; opacity: .6; }
+.book__cta:hover { background: #12406f; }
+.book__cta:focus-visible { outline: 2px solid var(--navy); outline-offset: 3px; }
+
+@media (max-width: 640px) {
+  .book { --pw: 46vw; --ph: calc(var(--pw) / .72); --t: 8px; --cy: 42%; }
+  .book__head { top: 20vh; }
+  .book__cta { padding: 12px 18px; font-size: 13px; }
+}
+
+/* Reduced motion: статичний відкритий розворот без pin */
+.book.is-static .book__stage { height: auto; min-height: 0; padding: 120px 0 100px; }
+.book.is-static .book__head { position: static; }
+.book.is-static .book__scene { position: relative; height: calc(var(--ph) + 60px); }
+.book.is-static .book__cta { position: relative; top: auto; display: flex; width: max-content; opacity: 1; visibility: visible; }

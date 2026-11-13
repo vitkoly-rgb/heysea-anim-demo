@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HeySea — animation demos</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/css/base.css?v=1794562012">
+<link rel="stylesheet" href="assets/css/map.css?v=1794569564">
+</head>
+<body>
+<nav class="demo-nav" aria-label="Demos">
+  <a href="index.html"><strong>HeySea · demos</strong></a>
+  <a href="map.html">map</a></nav>
+<main>
+<!-- ===== map ===== -->
+<section id="map" class="demo-sec hsmap" aria-labelledby="map-title" data-interval="6">
+  <span class="demo-label">08 · Map — SVG pan/zoom + autoplay timer</span>
+  <script type="application/json" class="hsmap__data">[{"label":"Guangdong Province, China","lat":23.1,"lng":113.3,"zoom":1.3},{"label":"Howard Street, Malta","lat":35.9,"lng":14.5,"zoom":1.35},{"label":"Federal Highway, Boca Raton","lat":26.36,"lng":-80.08,"zoom":1.3}]</script>
+
+  <div class="hsmap__top container">
+    <div>
+      <p class="hsmap__eyebrow">Global Network</p>
+      <h2 class="hsmap__title" id="map-title">Connect with HeySea and <em>discover more</em> about the company, its yachts and services.</h2>
+    </div>
+
+    <div class="hsmap__nav" role="group" aria-label="Office locations">
+      <div class="hsmap__now">
+        <span class="hsmap__name" aria-live="polite">Guangdong Province, China</span>
+        <!-- Пагінація = таймер: активний сегмент розтягується (довгий) і заповнюється, інші — короткі -->
+        <div class="hsmap__steps">
+                    <button type="button" class="hsmap__step is-active" data-i="0" aria-label="Show Guangdong Province, China (1 of 3)" aria-current="true"><i></i></button>
+                    <button type="button" class="hsmap__step" data-i="1" aria-label="Show Howard Street, Malta (2 of 3)"><i></i></button>
+                    <button type="button" class="hsmap__step" data-i="2" aria-label="Show Federal Highway, Boca Raton (3 of 3)"><i></i></button>
+                  </div>
+        <span class="hsmap__status" aria-hidden="true"></span>
+      </div>
+      <button type="button" class="hsmap__btn hsmap__btn--prev" aria-label="Previous office">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>
+      </button>
+      <button type="button" class="hsmap__btn hsmap__btn--next" aria-label="Next office">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg>
+      </button>
+      <button type="button" class="hsmap__btn hsmap__btn--play" aria-label="Pause autoplay" aria-pressed="false">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path class="i-pause" d="M6 4.5v7M10 4.5v7"/><path class="i-play" d="M5.5 3.5v9l7-4.5z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="hsmap__map">
+    <svg class="hsmap__svg" aria-hidden="true" preserveAspectRatio="none">
+      <path class="hsmap__land"/><path class="hsmap__borders"/>
+    </svg>
+    <div class="hsmap__pins">
+            <button type="button" class="hsmap__pin" data-i="0" aria-label="Show Guangdong Province, China office" tabindex="-1">
+        <i class="hsmap__pin-dot"></i><span class="hsmap__pin-label">Guangdong Province, China</span>
+      </button>
+            <button type="button" class="hsmap__pin" data-i="1" aria-label="Show Howard Street, Malta office" tabindex="-1">
+        <i class="hsmap__pin-dot"></i><span class="hsmap__pin-label">Howard Street, Malta</span>
+      </button>
+            <button type="button" class="hsmap__pin" data-i="2" aria-label="Show Federal Highway, Boca Raton office" tabindex="-1">
+        <i class="hsmap__pin-dot"></i><span class="hsmap__pin-label">Federal Highway, Boca Raton</span>
+      </button>
+          </div>
+  </div>
+
+  <div class="hsmap__cards container">
+        <article class="hsmap__card is-active" data-i="0">
+      <p class="hsmap__card-kicker">HeySea Asia</p>
+      <h3 class="hsmap__card-city">
+        <button type="button" class="hsmap__card-btn" aria-pressed="true">Guangdong Province, China</button>
+      </h3>
+      <ul class="hsmap__card-info">
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14.5s4.5-4.2 4.5-7.7A4.5 4.5 0 0 0 3.5 6.8c0 3.5 4.5 7.7 4.5 7.7Z"/><circle cx="8" cy="6.8" r="1.6"/></svg><span><span class="hsmap-vh">Address: </span>1610, Level 16, Landmark North, 39 Lung Sum Avenue, Sheung Shui, N.T. HK</span></li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3.5" width="12" height="9" rx="1"/><path d="m2.5 4.5 5.5 4 5.5-4"/></svg><a href="mailto:info@heysea.com">info@heysea.com</a></li>
+      </ul>
+      <!-- «Contact us» — лише в активній картці (розкривається, картка «підростає» вгору) -->
+      <div class="hsmap__card-cta"><div><a href="contact.html">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div></div>
+    </article>
+        <article class="hsmap__card" data-i="1">
+      <p class="hsmap__card-kicker">HeySea Europe</p>
+      <h3 class="hsmap__card-city">
+        <button type="button" class="hsmap__card-btn" aria-pressed="false">Malta</button>
+      </h3>
+      <ul class="hsmap__card-info">
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14.5s4.5-4.2 4.5-7.7A4.5 4.5 0 0 0 3.5 6.8c0 3.5 4.5 7.7 4.5 7.7Z"/><circle cx="8" cy="6.8" r="1.6"/></svg><span><span class="hsmap-vh">Address: </span>11/158 Howard Street, Malta</span></li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3.5" width="12" height="9" rx="1"/><path d="m2.5 4.5 5.5 4 5.5-4"/></svg><a href="mailto:sales@heyseayachts.eu">sales@heyseayachts.eu</a></li>
+      </ul>
+      <!-- «Contact us» — лише в активній картці (розкривається, картка «підростає» вгору) -->
+      <div class="hsmap__card-cta"><div><a href="contact.html" tabindex="-1">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div></div>
+    </article>
+        <article class="hsmap__card" data-i="2">
+      <p class="hsmap__card-kicker">HeySea America</p>
+      <h3 class="hsmap__card-city">
+        <button type="button" class="hsmap__card-btn" aria-pressed="false">Boca Raton, USA</button>
+      </h3>
+      <ul class="hsmap__card-info">
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14.5s4.5-4.2 4.5-7.7A4.5 4.5 0 0 0 3.5 6.8c0 3.5 4.5 7.7 4.5 7.7Z"/><circle cx="8" cy="6.8" r="1.6"/></svg><span><span class="hsmap-vh">Address: </span>1200N Federal Hwy Suite 300 Boca Raton FL33432 USA</span></li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3.5" width="12" height="9" rx="1"/><path d="m2.5 4.5 5.5 4 5.5-4"/></svg><a href="mailto:chris@heysea.com">chris@heysea.com</a></li>
+      </ul>
+      <!-- «Contact us» — лише в активній картці (розкривається, картка «підростає» вгору) -->
+      <div class="hsmap__card-cta"><div><a href="contact.html" tabindex="-1">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div></div>
+    </article>
+      </div>
+</section>
+<footer class="demo-end"><p>End of demos</p></footer>
+</main>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/SplitText.min.js"></script>
+<script src="vendor/MotionPathPlugin.min.js"></script>
+<script src="vendor/Observer.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
+<script src="vendor/d3-array.min.js"></script>
+<script src="vendor/d3-geo.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script src="assets/js/base.js?v=1794562012"></script>
+<script src="assets/js/map.js?v=1794569308"></script>
+</body>
+</html>

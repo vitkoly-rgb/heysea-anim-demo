@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HeySea — animation demos</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/css/base.css?v=1794562012">
+<link rel="stylesheet" href="assets/css/series-cursor.css?v=1794565877">
+</head>
+<body>
+<nav class="demo-nav" aria-label="Demos">
+  <a href="index.html"><strong>HeySea · demos</strong></a>
+  <a href="series-cursor.html">series-cursor</a></nav>
+<main>
+<!-- ===== series-cursor ===== -->
+<section id="series-cursor" class="demo-sec sc" aria-label="Yacht series">
+  <span class="demo-label">01 · Series slider + water cursor</span>
+
+  <div class="sc__stage">
+        <article class="sc__panel" data-index="0" data-title="Asteria">
+      <div class="sc__media">
+        <video class="sc__video" src="assets/video/series-1.mp4" poster="assets/img/photo-1.jpg"
+               muted loop playsinline preload="auto" aria-hidden="true"></video>
+        <span class="sc__shade" aria-hidden="true"></span>
+      </div>
+      <div class="sc__copy">
+        <p class="sc__count">01 / 03</p>
+        <h2 class="sc__title">Asteria</h2>
+        <p class="sc__text">Elegant and timeless yachts designed around open spaces, refined interiors and effortless comfort at sea.</p>
+        <a class="sc__cta" href="asteria.html">Onboard <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
+        <article class="sc__panel" data-index="1" data-title="Explorer">
+      <div class="sc__media">
+        <video class="sc__video" src="assets/video/series-2.mp4" poster="assets/img/photo-2.jpg"
+               muted loop playsinline preload="metadata" aria-hidden="true"></video>
+        <span class="sc__shade" aria-hidden="true"></span>
+      </div>
+      <div class="sc__copy">
+        <p class="sc__count">02 / 03</p>
+        <h2 class="sc__title">Explorer</h2>
+        <p class="sc__text">Long-range expedition yachts built for remote waters, extended autonomy and confident ocean crossings.</p>
+        <a class="sc__cta" href="explorer.html">Onboard <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
+        <article class="sc__panel" data-index="2" data-title="Bespoke Superyachts">
+      <div class="sc__media">
+        <video class="sc__video" src="assets/video/series-3.mp4" poster="assets/img/photo-3.jpg"
+               muted loop playsinline preload="metadata" aria-hidden="true"></video>
+        <span class="sc__shade" aria-hidden="true"></span>
+      </div>
+      <div class="sc__copy">
+        <p class="sc__count">03 / 03</p>
+        <h2 class="sc__title">Bespoke Superyachts</h2>
+        <p class="sc__text">Fully custom builds shaped with the owner — from the first sketch to the last stitch of the interior.</p>
+        <a class="sc__cta" href="bespoke.html">Onboard <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
+    
+    <!-- Static badge for touch devices (custom cursor is hidden there) -->
+    <span class="sc__badge" aria-hidden="true">
+      <svg viewBox="0 0 48 48" width="40" height="40"><circle cx="24" cy="24" r="22.5" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M3.1 26 H44.9 A21 21 0 0 1 3.1 26Z" fill="#fff"/></svg>
+      Onboard    </span>
+  </div>
+
+  <!-- Custom cursor: canvas water simulation + label. Fixed-positioned, driven by JS. -->
+  <div class="sc-cursor" aria-hidden="true">
+    <canvas class="sc-cursor__water" width="64" height="64"></canvas>
+    <span class="sc-cursor__label">Onboard</span>
+  </div>
+</section>
+<div class="demo-spacer">↓ before / after</div>
+<footer class="demo-end"><p>End of demos</p></footer>
+</main>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/SplitText.min.js"></script>
+<script src="vendor/MotionPathPlugin.min.js"></script>
+<script src="vendor/Observer.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
+<script src="vendor/d3-array.min.js"></script>
+<script src="vendor/d3-geo.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script src="assets/js/base.js?v=1794562012"></script>
+<script src="assets/js/series-cursor.js?v=1794565642"></script>
+</body>
+</html>
