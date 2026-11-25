@@ -132,8 +132,11 @@
   renderAll();
 
   /* ---------- скрол-таймлайн ---------- */
-  const CLOSED = 0.86;                                     // масштаб закритої брошури (відкрита росте до 1)
-  gsap.set(obj, { y: () => innerHeight * 0.16, scale: CLOSED, rotationX: 8 });
+  // Масштаб і зсув закритої брошури — з CSS (--closed, --dyc; за Figma desktop/mobile). Відкрита росте до scale 1, y 0.
+  const css = (k, d) => parseFloat(getComputedStyle(root).getPropertyValue(k)) || d;
+  const CLOSED = () => css('--closed', 0.8875);
+  const closedY = () => innerHeight * css('--dyc', 0);
+  gsap.set(obj, { y: () => closedY() + innerHeight * 0.1, scale: CLOSED, rotationX: 8 });
   gsap.set(cta, { autoAlpha: 0, y: 16 });
 
   tl = gsap.timeline({
@@ -149,11 +152,11 @@
   if (HS.textFill) HS.textFill(title, { timeline: tl, at: 0, duration: 1 });
   else tl.to({}, { duration: 1 }, 0);
   // B) піднімається до тексту
-  tl.to(obj, { y: 0, rotationX: 0, ease: 'power2.inOut', duration: 0.8 }, 1);
+  tl.to(obj, { y: closedY, rotationX: 0, ease: 'power2.inOut', duration: 0.8 }, 1);
   // C) обкладинка відкривається + брошура росте й зсувається на ½ сторінки (розворот по центру)
   const cover = leaves[0];
   tl.to(cover, { p: 1, ease: 'power1.inOut', duration: 1.2 }, 1.9)
-    .to(obj, { scale: 1, x: () => pageW() / 2, ease: 'power1.inOut', duration: 1.2 }, 1.9)
+    .to(obj, { scale: 1, y: 0, x: () => pageW() / 2, ease: 'power1.inOut', duration: 1.2 }, 1.9)
     .to(lshadow, { opacity: 1, duration: 0.2 }, 2.9);
   // D) 7 перегортань: кожне 0.9, пауза на розвороті 0.45 (мобільний: швидше — «pages scroll by»)
   const mob = innerWidth < 640;
@@ -164,7 +167,7 @@
   closeAt = t + 0.1;
   tl.to(leaves, { p: 0, ease: 'power2.inOut', duration: 1.6 }, closeAt);   // один «стос» — без віяла
   tl.to(lshadow, { opacity: 0, duration: 0.15 }, closeAt)
-    .to(obj, { scale: CLOSED, x: 0, ease: 'power2.inOut', duration: 1.6 }, closeAt)
+    .to(obj, { scale: CLOSED, y: closedY, x: 0, ease: 'power2.inOut', duration: 1.6 }, closeAt)
   // F) лишається закритою, CTA
     .to(cta, { autoAlpha: 1, y: 0, ease: 'power2.out', duration: 0.4 }, closeAt + 1.6)
     .to({}, { duration: 0.6 });

@@ -35,8 +35,8 @@ $hsmap = [
             'label' => 'Istanbul, Türkiye', 'side' => 'right',   // side: де тег відносно точки (Malta й Istanbul поруч)
             'kicker' => 'HeySea Europe & Asia', 'city' => 'Istanbul, Türkiye',
             'lat' => 41.01, 'lng' => 28.98, 'zoom' => 1.4,
-            'address' => 'Placeholder: Levent Mah., Büyükdere Cad. No. 000, Beşiktaş, Istanbul, Türkiye',   // TODO: реальна адреса
-            'email' => 'turkiye@heysea.example',                                                            // TODO
+            'address' => 'Sapanca Cad. No: 8A, Hadımköy, Arnavutköy 34555, Istanbul',   // з Figma «Office card · Türkiye» (растр, звірити з клієнтом)
+            'email' => 'info@heyseaturkiye.com',
         ],
     ],
 ];
@@ -94,20 +94,30 @@ $hsmapIcon = [
     </div>
   </div>
 
-  <div class="hsmap__cards container">
-    <?php foreach ($hsmap['offices'] as $i => $o): $on = $i === 0; ?>
-    <article class="hsmap__card<?= $on ? ' is-active' : '' ?>" data-i="<?= $i ?>">
-      <p class="hsmap__card-kicker"><?= $e($o['kicker']) ?></p>
-      <h3 class="hsmap__card-city">
-        <button type="button" class="hsmap__card-btn" aria-pressed="<?= $on ? 'true' : 'false' ?>"><?= $e($o['city']) ?></button>
-      </h3>
-      <ul class="hsmap__card-info">
-        <li><?= $hsmapIcon['pin'] ?><span><span class="hsmap-vh">Address: </span><?= $e($o['address']) ?></span></li>
-        <li><?= $hsmapIcon['mail'] ?><a href="mailto:<?= $e($o['email']) ?>"><?= $e($o['email']) ?></a></li>
-      </ul>
-      <!-- «Contact us» — лише в активній картці (розкривається, картка «підростає» вгору) -->
-      <div class="hsmap__card-cta"><div><a href="<?= $e($hsmap['contact']['href']) ?>"<?= $on ? '' : ' tabindex="-1"' ?>><?= $e($hsmap['contact']['label']) ?><?= $hsmapIcon['chev'] ?></a></div></div>
-    </article>
-    <?php endforeach; ?>
+  <!-- Слайдер карток: активна в фокусі (по центру), сусідні виглядають з боків. Один індекс з таймером/пагінацією/пінами.
+       Drag/swipe (pointer events), клік по сусідній — активує, ←/→ коли фокус у слайдері. -->
+  <div class="hsmap__cards" role="region" aria-roledescription="carousel" aria-label="Office details" tabindex="0">
+    <div class="hsmap__track">
+      <?php foreach ($hsmap['offices'] as $i => $o): $on = $i === 0; ?>
+      <article class="hsmap__card<?= $on ? ' is-active' : '' ?>" data-i="<?= $i ?>" aria-roledescription="slide" aria-label="<?= $i + 1 ?> of <?= count($hsmap['offices']) ?>">
+        <p class="hsmap__card-kicker"><?= $e($o['kicker']) ?></p>
+        <h3 class="hsmap__card-city">
+          <button type="button" class="hsmap__card-btn" aria-pressed="<?= $on ? 'true' : 'false' ?>"><?= $e($o['city']) ?></button>
+        </h3>
+        <dl class="hsmap__card-info">
+          <div class="hsmap__card-field hsmap__card-field--addr">
+            <dt><?= $hsmapIcon['pin'] ?>Address</dt>
+            <dd><?= $e($o['address']) ?></dd>
+          </div>
+          <div class="hsmap__card-field">
+            <dt><?= $hsmapIcon['mail'] ?>Email</dt>
+            <dd><a href="mailto:<?= $e($o['email']) ?>" draggable="false"<?= $on ? '' : ' tabindex="-1"' ?>><?= $e($o['email']) ?></a></dd>
+          </div>
+        </dl>
+        <!-- «Contact us» є в усіх картках (однакова висота), але видимий/фокусний лише в активній -->
+        <div class="hsmap__card-cta"><a href="<?= $e($hsmap['contact']['href']) ?>" draggable="false"<?= $on ? '' : ' tabindex="-1"' ?>><?= $e($hsmap['contact']['label']) ?><?= $hsmapIcon['chev'] ?></a></div>
+      </article>
+      <?php endforeach; ?>
+    </div>
   </div>
 </section>

@@ -1,12 +1,17 @@
 /* ===== 05 · Book (pure CSS 3D, Round 5 — за підписаним Figma «Brochure Request») ===== */
 .book {
-  /* Ландшафтні сторінки: розворот ≈ 2.8 : 1. Усе (і кегль на сторінках) рахується від --pw */
-  --pw: min(41vw, 600px, 78vh);
+  /* Ландшафтні сторінки: розворот ≈ 2.8 : 1. Усе (і кегль на сторінках) рахується від --pw.
+     Розміри — з Figma «🎨 Design / Brochure animation · Desktop» (1440×900):
+     відкритий розворот 1280×453 (сторінка 640×453 = 44.44vw), x 80–1360, y 250–703 (центр ≈ 53 %);
+     закрита брошура 568×404 (= 0.8875 сторінки), y 330–734 (центр ≈ 59 %). */
+  --pw: min(44.45vw, 72vh, 780px);
   --ph: calc(var(--pw) / 1.4);
   --t: 12px;                       /* товщина блоку сторінок (≥ кількість аркушів + 2 px) */
   --paper: #fdfdfc;
   --pale: #c9d6e2;                 /* блідо-блакитні панелі з макета */
-  --cy: 60%;                       /* вертикальний центр книги на сцені */
+  --cy: 53%;                       /* вертикальний центр ВІДКРИТОЇ книги на сцені */
+  --closed: .8875;                 /* масштаб закритої брошури відносно сторінки (JS читає) */
+  --dyc: .062;                     /* зсув закритої брошури вниз, частка висоти екрана (JS читає) */
   --b-ink: #0d1b2a; --b-muted: #8b939c;
   background: #f7f9fb; color: var(--b-ink);
 }
@@ -92,7 +97,7 @@
 
 /* CTA під книгою (у фінальному «closed» стані) */
 .book__cta {
-  position: absolute; left: 50%; top: calc(var(--cy) + var(--ph) / 2 + 28px); transform: translateX(-50%);
+  position: absolute; left: 50%; top: calc(var(--cy) + var(--dyc) * 100% + var(--ph) * var(--closed) / 2 + 28px); transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 999px;
   background: var(--b-ink); color: #fff; text-decoration: none; font-size: 14px; font-weight: 500; white-space: nowrap;
   opacity: 0; visibility: hidden;
@@ -102,7 +107,9 @@
 .book__cta:focus-visible { outline: 2px solid var(--b-ink); outline-offset: 3px; }
 
 @media (max-width: 640px) {
-  .book { --pw: 45vw; --t: 8px; --cy: 52%; }
+  /* Figma Mobile (390×844): розворот 370×131 (сторінка 47.4vw), центр ≈ 47 %;
+     закрита брошура 335×238 (≈ 86vw = 1.81 сторінки), центр ≈ 53 % */
+  .book { --pw: 47.4vw; --t: 8px; --cy: 47%; --closed: 1.81; --dyc: .064; }
   .book__head { top: 14vh; }
   .book__title { font-size: 22px; }
   .book__cta { padding: 11px 18px; font-size: 13px; }
@@ -111,6 +118,6 @@
 /* Reduced motion: статичний відкритий перший розворот без pin */
 .book.is-static .book__stage { height: auto; min-height: 0; padding: 120px 0 100px; }
 .book.is-static .book__head { position: static; }
-.book.is-static { --cy: 50%; }
+.book.is-static { --cy: 50%; --dyc: 0; }
 .book.is-static .book__scene { position: relative; height: calc(var(--ph) + 80px); }
 .book.is-static .book__cta { position: relative; top: auto; display: flex; width: max-content; opacity: 1; visibility: visible; }

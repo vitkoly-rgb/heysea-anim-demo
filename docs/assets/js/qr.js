@@ -74,4 +74,52 @@
       track.removeEventListener('focusin', onFocus);
     };
   });
+
+  // ---- Entrance (plays once on scroll entry; all breakpoints) -------------------------------------------
+  // Animates only the INNER elements (eyebrow, title lines, QR svg, name, description) — never .qr__col /
+  // .qr__track, whose opacity/translate/x belong to the pin scrub + "appear" logic above. So the entrance
+  // composes with both the desktop pin and the mobile native swipe. Reduced motion: nothing is hidden.
+  if (window.HS && HS.reduced) return;
+  const eyebrow = section.querySelector('.qr__eyebrow');
+  const title = section.querySelector('.qr__title');
+  const colEls = gsap.utils.toArray('.qr__col', section);
+  const parts = (col) => ({ code: col.querySelector('.qr__code'), name: col.querySelector('.qr__name'), desc: col.querySelector('.qr__desc') });
+  const all = colEls.map(parts);
+
+  // title: lines rise out of a mask (SplitText); reverted after the entrance so resizes reflow natively
+  const split = window.SplitText && title ? SplitText.create(title, { type: 'lines', mask: 'lines', linesClass: 'qr__line' }) : null;
+  const lines = split ? split.lines : [title];
+
+  gsap.set(eyebrow, { autoAlpha: 0, y: 12 });
+  gsap.set(lines, split ? { yPercent: 105 } : { autoAlpha: 0, y: 18 });
+  all.forEach(({ code, name, desc }) => {
+    gsap.set(code, { autoAlpha: 0, scale: 0.9, clipPath: 'inset(0% 0% 100% 0%)', transformOrigin: '50% 50%' });
+    gsap.set([name, desc], { autoAlpha: 0, y: 14 });
+  });
+
+  const play = () => {
+    const vw = document.documentElement.clientWidth;
+    // only columns currently on screen get the staggered reveal; the rest are made ready at once
+    // (on desktop the "appear" scrub fades them in later as they arrive from the right; on mobile they're off-swipe)
+    const onScreen = [], later = [];
+    colEls.forEach((col, i) => (col.getBoundingClientRect().left < vw - 20 ? onScreen : later).push(all[i]));
+    later.forEach(({ code, name, desc }) => gsap.set([code, name, desc], { clearProps: 'all' }));
+
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    tl.to(eyebrow, { autoAlpha: 1, y: 0, duration: 0.7 }, 0)
+      .to(lines, split ? { yPercent: 0, duration: 1.05, ease: 'expo.out', stagger: 0.09 } : { autoAlpha: 1, y: 0, duration: 0.9 }, 0.12);
+    onScreen.forEach(({ code, name, desc }, i) => {
+      const at = 0.45 + i * 0.11;
+      tl.to(code, { autoAlpha: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0%)', duration: 1.0, ease: 'expo.out' }, at)
+        .to(name, { autoAlpha: 1, y: 0, duration: 0.7 }, at + 0.22)
+        .to(desc, { autoAlpha: 1, y: 0, duration: 0.8 }, at + 0.3);
+    });
+    tl.eventCallback('onComplete', () => {
+      if (split) split.revert();
+      gsap.set([eyebrow, ...all.flatMap((p) => [p.code, p.name, p.desc])], { clearProps: 'all' });
+    });
+  };
+
+  // created after the pin so its start is measured in the final layout; 'top 72%' is before the pin starts
+  ScrollTrigger.create({ trigger: section, start: 'top 72%', once: true, onEnter: play });
 })();

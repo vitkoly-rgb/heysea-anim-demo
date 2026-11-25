@@ -27,7 +27,8 @@
   const playBtn  = root.querySelector('.hsmap__btn--play');
   const pins     = [...root.querySelectorAll('.hsmap__pin')];
   const cards    = [...root.querySelectorAll('.hsmap__card')];
-  const cardList = root.querySelector('.hsmap__cards');
+  const cardList = root.querySelector('.hsmap__cards');   // в'юпорт слайдера
+  const track    = root.querySelector('.hsmap__track');
 
   const WORLD_W = 1000;
   const proj = d3.geoEqualEarth();
@@ -72,6 +73,7 @@
   function measure() {
     W = mapEl.clientWidth || 1; H = mapEl.clientHeight || 1;
     if (pts.length) { Object.assign(cam, camFor(active)); render(); }
+    if (track) slideTo(active, false);
   }
 
   /* ---------- перемикання ---------- */
@@ -89,10 +91,10 @@
     cards.forEach((c, n) => {
       c.classList.toggle('is-active', n === active);
       c.querySelector('.hsmap__card-btn').setAttribute('aria-pressed', String(n === active));
-      const cta = c.querySelector('.hsmap__card-cta a');            // «Contact us» фокусується лише в активній
-      n === active ? cta.removeAttribute('tabindex') : cta.setAttribute('tabindex', '-1');
+      // посилання (email, «Contact us») фокусуються лише в активній картці
+      c.querySelectorAll('a').forEach((a) => (n === active ? a.removeAttribute('tabindex') : a.setAttribute('tabindex', '-1')));
     });
-    scrollCardIntoView(cards[active]);
+    slideTo(active, animate);
 
     if (pts.length) {
       const to = camFor(active);
@@ -110,11 +112,87 @@
     restartTimer();
   }
 
-  /** На мобільному картки — горизонтальний скрол: прокручуємо лише сам список, не сторінку */
-  function scrollCardIntoView(card) {
-    if (cardList.scrollWidth <= cardList.clientWidth) return;
-    cardList.scrollTo({ left: card.offsetLeft, behavior: reduced ? 'auto' : 'smooth' });
+  /* ---------- слайдер карток ----------
+   Трек зсувається так, щоб активна картка стала по центру в'юпорта (сусідні визирають з боків).
+   Джерело правди — `active`; слайдер лише відображає його (go → slideTo). */
+  const trackX = { v: 0 };
+  const setX = gsap.quickSetter(track, 'x', 'px');
+  let slideTw = null;
+  const xFor = (i) => {
+    const c = cards[i];
+    return Math.round(cardList.clientWidth / 2 - (c.offsetLeft + c.offsetWidth / 2));
+  };
+  const xMin = () => xFor(cards.length - 1), xMax = () => xFor(0);
+  function slideTo(i, animate = true) {
+    slideTw && slideTw.kill();
+    const x = xFor(i);
+    if (!animate || reduced) { trackX.v = x; setX(x); return; }
+    slideTw = gsap.to(trackX, { v: x, duration: 0.85, ease: 'power3.out', onUpdate: () => setX(trackX.v) });
   }
+
+  // drag / swipe: pointer events (миша + touch + перо). touch-action: pan-y — вертикальний скрол сторінки лишається нативним.
+  const drag = { id: null, x0: 0, y0: 0, tx0: 0, moved: false, axis: null, lastX: 0, lastT: 0, vx: 0 };
+  let suppressClick = false;
+  cardList.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || drag.id !== null) return;
+    Object.assign(drag, { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: trackX.v, moved: false, axis: null, lastX: e.clientX, lastT: e.timeStamp, vx: 0 });
+    suppressClick = false;
+  });
+  cardList.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (!drag.axis) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      drag.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (drag.axis === 'y') { drag.id = null; return; }           // вертикальний жест — це скрол сторінки
+      drag.moved = true;
+      slideTw && slideTw.kill();
+      drag.tx0 = trackX.v; drag.x0 = e.clientX;
+      cardList.setPointerCapture(e.pointerId);
+      cardList.classList.add('is-dragging');
+      setPaused('drag', true);
+    }
+    let x = drag.tx0 + (e.clientX - drag.x0);
+    const lo = xMin(), hi = xMax();                                 // «гумка» за крайніми картками
+    if (x > hi) x = hi + (x - hi) * 0.35;
+    if (x < lo) x = lo + (x - lo) * 0.35;
+    trackX.v = x; setX(x);
+    const dt = e.timeStamp - drag.lastT;
+    if (dt > 0) drag.vx = 0.8 * ((e.clientX - drag.lastX) / dt) + 0.2 * drag.vx;
+    drag.lastX = e.clientX; drag.lastT = e.timeStamp;
+  });
+  function endDrag(e) {
+    if (e.pointerId !== drag.id) return;
+    drag.id = null;
+    if (!drag.moved) return;
+    suppressClick = true;                                           // клік після перетягування не активує картку
+    cardList.classList.remove('is-dragging');
+    setPaused('drag', false);
+    // найближча до центру картка + «кидок» (швидкий свайп гортає хоча б на одну)
+    const center = cardList.clientWidth / 2 - trackX.v;
+    let near = 0, best = Infinity;
+    cards.forEach((c, n) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - center); if (d < best) { best = d; near = n; } });
+    const dist = trackX.v - xFor(active);
+    if (near === active && (Math.abs(drag.vx) > 0.35 || Math.abs(dist) > 60)) near = active + (dist < 0 ? 1 : -1);
+    near = Math.max(0, Math.min(cards.length - 1, near));
+    near === active ? slideTo(active) : go(near);
+  }
+  cardList.addEventListener('pointerup', endDrag);
+  cardList.addEventListener('pointercancel', endDrag);
+  cardList.addEventListener('click', (e) => {
+    if (!suppressClick) return;
+    suppressClick = false; e.preventDefault(); e.stopPropagation();
+  }, true);
+  cardList.addEventListener('dragstart', (e) => e.preventDefault());
+  cardList.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(active - 1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(active + 1); }
+  });
+  // Tab на кнопку міста неактивної картки → вона стає активною (і виїжджає в центр)
+  cardList.addEventListener('focusin', (e) => {
+    const c = e.target.closest('.hsmap__card');
+    if (c && e.target.matches(':focus-visible') && +c.dataset.i !== active) go(+c.dataset.i);
+  });
 
   /* ---------- таймер + пауза ----------
    Таймер — tween прогресу 0→1 активного сегмента. Працює лише коли НЕМАЄ жодної причини паузи:
@@ -171,8 +249,9 @@
   pins.forEach((p) => p.addEventListener('click', () => go(+p.dataset.i)));
   steps.forEach((st) => st.addEventListener('click', () => go(+st.dataset.i)));
   cards.forEach((c) => c.addEventListener('click', (e) => {
-    if (e.target.closest('a')) return;            // посилання tel:/mailto: працюють як звичайно
-    if (+c.dataset.i !== active) go(+c.dataset.i);
+    if (+c.dataset.i === active) return;          // в активній посилання mailto:/«Contact us» працюють як звичайно
+    e.preventDefault();                           // клік по сусідній (навіть по її посиланню) — спершу робить її активною
+    go(+c.dataset.i);
   }));
   root.querySelector('.hsmap__nav').addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(active - 1); }

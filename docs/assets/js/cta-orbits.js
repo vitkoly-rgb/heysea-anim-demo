@@ -1,6 +1,6 @@
 /* ==========================================================================
    06 · CTA orbits
-   - Canvas background: faint ellipses; on each a dot travels with a fading trail and a live
+   - Canvas background: faint ellipses; on each a dot travels with a fading trail (one smooth gradient arc) and a live
      "[lat lon]" label derived from its orbital position (a pseudo satellite ground track).
    - Runs only while on screen (IntersectionObserver) — rAF also stops in hidden tabs.
    - Reduced motion: one static frame.
@@ -38,7 +38,10 @@
   orbits = orbits.map((o) => ({ ...o, theta: o.phase, rotRad: (o.rot * Math.PI) / 180 }));
 
   const TRAIL_PX = 140;      // trail length in px (converted to an angle per orbit); shorter for the slow orbits
-  const TRAIL_SEGS = 32;
+  const TRAIL_STOPS = 14;    // gradient stops along the trail (not geometry — the arc itself is exact)
+  const STAR_RGB = '255,255,255';
+  const TAU = Math.PI * 2;
+  const hasConic = typeof ctx.createConicGradient === 'function';
   const FONT = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
   const content = sec.querySelector('.cta-inner');
   let W = 0, H = 0, dpr = 1;
@@ -76,6 +79,43 @@
   }
   const label = (o, t) => { const [la, lo] = coordsAt(o, t); return `[${dms(la, 'N', 'S')} ${dms(lo, 'E', 'W')}]`; };
 
+  /** Fading trail behind the star: single exact elliptical arc + gradient stroke (cheap: 1 path, 1 gradient). */
+  function drawTrail(o, erx, ery) {
+    const avgR = (erx + ery) / 2;
+    const span = Math.min(TRAIL_PX / avgR, Math.PI * 0.9); // parameter span (< π → fits a conic gradient cleanly)
+    const dir = Math.sign(o.speed) || 1;
+    const cx = o.cx * W, cy = o.cy * H;
+    const head = o.theta, tail = o.theta - dir * span;
+    let grad;
+    if (hasConic) {
+      // screen angle of a trail point around the ellipse centre (monotonic along the arc)
+      const ang = (t) => { const [px, py] = pointAt(o, t); return Math.atan2(py - cy, px - cx); };
+      // put the gradient's 0/1 seam opposite the trail so it can never touch the stroke (or its round caps)
+      const start = ang(o.theta - dir * span / 2) + Math.PI;
+      grad = ctx.createConicGradient(start, cx, cy);
+      for (let i = 0; i <= TRAIL_STOPS; i++) {
+        const u = i / TRAIL_STOPS;                       // 0 = head … 1 = tail
+        const a = Math.pow(1 - u, 1.6) * 0.85;           // eased fade → 0
+        const off = ((((ang(head - dir * span * u) - start) % TAU) + TAU) % TAU) / TAU;
+        grad.addColorStop(off, `rgba(${STAR_RGB},${a.toFixed(3)})`);
+      }
+    } else {
+      // fallback (very old browsers): straight head → tail gradient
+      const [hx, hy] = pointAt(o, head), [tx, ty] = pointAt(o, tail);
+      grad = ctx.createLinearGradient(hx, hy, tx, ty);
+      grad.addColorStop(0, `rgba(${STAR_RGB},0.85)`);
+      grad.addColorStop(1, `rgba(${STAR_RGB},0)`);
+    }
+    ctx.beginPath();
+    // canvas ellipse angles are the same parameter t as pointAt() → the arc lies exactly on the orbit
+    if (dir > 0) ctx.ellipse(cx, cy, erx, ery, o.rotRad, tail, head);
+    else ctx.ellipse(cx, cy, erx, ery, o.rotRad, head, tail);
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = grad;
+    ctx.stroke();
+  }
+
   function draw() {
     ctx.clearRect(0, 0, W, H);
     ctx.font = FONT;
@@ -94,21 +134,10 @@
       const behindCopy = calm && hx > calm.l && hx < calm.r && hy > calm.t && hy < calm.b;
       ctx.globalAlpha = behindCopy ? 0.3 : 1;
 
-      // Trail: short segments with decreasing alpha behind the dot
-      const avgR = (erx + ery) / 2;
-      const trail = TRAIL_PX / avgR;
-      const dir = Math.sign(o.speed) || 1;
-      let prev = pointAt(o, o.theta);
-      ctx.lineCap = 'round';
-      ctx.lineWidth = 1.4;
-      for (let i = 1; i <= TRAIL_SEGS; i++) {
-        const p = pointAt(o, o.theta - dir * trail * (i / TRAIL_SEGS));
-        const a = Math.pow(1 - (i - 1) / TRAIL_SEGS, 1.3) * 0.8;
-        ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(p[0], p[1]);
-        ctx.strokeStyle = `rgba(255,255,255,${a.toFixed(3)})`;
-        ctx.stroke();
-        prev = p;
-      }
+      // Trail: ONE continuous arc of the orbit (exact ctx.ellipse sub-arc, no segments/dots), stroked with a
+      // conic gradient centred on the ellipse: colour stops are placed at the screen angles of samples along
+      // the trail, so the alpha fades smoothly from the star colour at the head to fully transparent at the tail.
+      drawTrail(o, erx, ery);
 
       // Dot + soft halo
       const [x, y] = pointAt(o, o.theta);

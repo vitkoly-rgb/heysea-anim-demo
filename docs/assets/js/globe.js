@@ -5,7 +5,8 @@
  *   0.00–0.16  text-fill заголовка (HS.textFill: літери по одній до 100 %), низ планети вже видно (Rotation 01)
  *   0.16–0.40  планета піднімається ВИЩЕ — видно її центр (Rotation 02), заголовок блюриться
  *   0.16–0.86  м'який поворот ≈ 110° (Атлантика → Азія; Rotation 02–05), маркери офісів
- *   0.72–0.92  планета їде вгору, низ розчиняється в navy, статистика 15+ / 30+ / 4 (Rotation 05–06)
+ *   0.69–0.84  планета їде вгору; 0.83–0.89 статистика 15+ / 30+ / 4 з'являється в центрі екрана
+ *   0.89       цифри по центру → лічильник (один раз, 1,4 с за часом; назад не скидається), далі ~85vh скролу секція тримається
  *
  * Плавність: таймлайн рухає лише ЦІЛЬОВИЙ кут (target); окремий цикл на gsap.ticker щокадру
  * наближає поточний кут до цілі (експоненційний lerp, незалежний від FPS) → інерція без ривків навіть
@@ -130,18 +131,31 @@
   /* ---------- таймлайн ---------- */
   const counters = [...stats.querySelectorAll('[data-count]')].map((el) => ({ el, to: +el.dataset.count, v: 0 }));
 
+  let counted = false;
+  function runCounters() {
+    if (counted) return;
+    counted = true;
+    counters.forEach((c, i) => {
+      gsap.fromTo(c, { v: 0 }, {
+        v: c.to, duration: 1.4, delay: i * 0.1, ease: 'power2.out',
+        onUpdate: () => { c.el.textContent = Math.round(c.v); },
+      });
+    });
+  }
+
   function buildTimeline() {
+    counters.forEach((c) => { c.el.textContent = '0'; });
     const vh = () => innerHeight;
     const mob = () => innerWidth < 640;
     const yStart = () => vh() - size * 0.2;                           // видно «шапку» планети (Rotation 01)
     const yRise  = () => vh() * (mob() ? 0.6 : 0.58) - size / 2;      // центр планети на ~58 % висоти (Rotation 02)
-    const yEnd   = () => vh() * (mob() ? 0.3 : 0.24) - size / 2;      // планета їде вгору (Rotation 05)
+    const yEnd   = () => vh() * (mob() ? 0.34 : 0.36) - size;         // планета їде вгору, низ — на ~36 % висоти: центр екрана вільний для цифр
 
     gsap.set(planet, { y: yStart });
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
-        trigger: root, start: 'top top', end: '+=420%',
+        trigger: root, start: 'top top', end: '+=520%',
         pin: stage, scrub: 1, invalidateOnRefresh: true,
       },
     });
@@ -155,16 +169,12 @@
       .to(target, { lambda: ROT_END.lambda, phi: ROT_END.phi, ease: 'sine.inOut', duration: 0.7 }, 0.16)
       .to(target, { markers: 1, duration: 0.06 }, 0.3)
       .to(head, { opacity: 0, duration: 0.08 }, 0.56)
-      .to(planet, { y: yEnd, ease: 'power2.inOut', duration: 0.2 }, 0.72)
-      .to(fade, { opacity: 1, duration: 0.16 }, 0.76)
-      .fromTo(stats, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, ease: 'power2.out', duration: 0.1 }, 0.84);
-
-    counters.forEach((c, i) => {
-      tl.fromTo(c, { v: 0 }, {
-        v: c.to, duration: 0.12, ease: 'power1.out',
-        onUpdate: () => { c.el.textContent = Math.round(c.v); },
-      }, 0.85 + i * 0.015);
-    });
+      .to(planet, { y: yEnd, ease: 'power2.inOut', duration: 0.15 }, 0.69)
+      .to(fade, { opacity: 1, duration: 0.14 }, 0.72)
+      .fromTo(stats, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, ease: 'power2.out', duration: 0.06 }, 0.83)
+      // цифри вже по центру екрана → лічильник стартує (один раз, за часом, не за скролом)
+      .call(runCounters, null, 0.89)
+      .to({}, { duration: 0.17 }, 0.89);   // запас скролу, щоб лічильник встиг відпрацювати в pin
     return tl;
   }
 

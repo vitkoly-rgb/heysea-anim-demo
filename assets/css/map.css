@@ -1,6 +1,6 @@
 /* ===== 08 · Map (за Figma-компонентом «Map») ===== */
 /* Палітра з Figma Design (Intro · Our yachts / Map): дуже світлий фон, navy-чорний текст, акцент — italic serif */
-.hsmap { --bg: #f7f9fb; --ink: #0d1b2a; --muted: #8b939c; --land: #e6eaee; --card: #fff; --card-ink: #222; padding: 110px 0 80px; background: var(--bg); color: var(--ink); overflow: hidden; }
+.hsmap { --bg: #f7f9fb; --ink: #0d1b2a; --muted: #8b939c; --land: #e6eaee; --card: #fff; --card-ink: #222; padding: 110px 0 80px; background: var(--bg); color: var(--ink); overflow: hidden; overflow: clip; }
 .hsmap-vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 .hsmap__top { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; }
@@ -58,33 +58,37 @@
 .hsmap__pin.is-active .hsmap__pin-dot::after { content: ""; position: absolute; left: -3px; top: 0; width: 13px; height: 13px; border: 1px solid #111; border-radius: 50%; animation: hsmap-pulse 2s ease-out infinite; }
 @keyframes hsmap-pulse { from { transform: scale(.6); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
 
-/* ---- Картки: вирівняні по низу; активна темна, вища (росте вгору) і з «Contact us» ---- */
-.hsmap__cards { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: end; margin-top: -170px; }
-.hsmap__card { position: relative; padding: 24px 20px 26px; background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(13, 27, 42, .04); border-radius: 4px; cursor: pointer; transition: background-color .5s ease, color .5s ease, padding .6s cubic-bezier(.65, 0, .35, 1), box-shadow .5s; }
-.hsmap__card:not(.is-active):hover { box-shadow: 0 6px 20px -8px rgba(13, 27, 42, .18); }
-.hsmap__card-kicker { margin: 0 0 6px; font-size: 12px; letter-spacing: .02em; text-transform: uppercase; }
-.hsmap__card-city { margin: 0 0 18px; font: 400 18px/1.2 var(--font); }
+/* ---- Картки-слайдер: активна по центру (у фокусі), сусідні «визирають» з боків; трек рухає GSAP (x) ---- */
+/* В'юпорт на всю ширину секції (сама секція обрізає — overflow: clip, щоб фокус не «прокручував» її вбік) */
+.hsmap__cards { --cw: clamp(300px, 36vw, 600px); --gap: 20px; position: relative; z-index: 3; margin-top: -150px; padding: 14px 0 6px; pointer-events: none; outline: none; touch-action: pan-y; }
+.hsmap__cards:focus-visible .hsmap__card.is-active { outline: 2px solid var(--navy, #0c2b50); outline-offset: 4px; }
+.hsmap__track { display: flex; align-items: stretch; gap: var(--gap); width: max-content; will-change: transform; }
+.hsmap__card { position: relative; flex: 0 0 var(--cw); width: var(--cw); box-sizing: border-box; display: flex; flex-direction: column; padding: 34px 40px 30px; background: var(--card); color: var(--ink); border-radius: 6px; box-shadow: 0 10px 30px -18px rgba(13, 27, 42, .28); pointer-events: auto; cursor: pointer; user-select: none; -webkit-user-select: none; transform: scale(.94); transform-origin: 50% 100%; opacity: .72; transition: background-color .5s ease, color .5s ease, box-shadow .5s, opacity .5s, transform .7s cubic-bezier(.22, 1, .36, 1); }
+.hsmap__card:not(.is-active):hover { opacity: .92; box-shadow: 0 14px 34px -16px rgba(13, 27, 42, .3); }
+.hsmap__card-kicker { margin: 0 0 10px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); transition: color .5s; }
+.hsmap__card-city { margin: 0 0 28px; font: italic 400 clamp(28px, 2.3vw, 38px)/1.08 var(--serif); letter-spacing: -.01em; }
 .hsmap__card-btn { all: unset; cursor: pointer; }
-.hsmap__card-info { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 14px; line-height: 1.3; color: #5b6570; transition: color .5s; }
-.hsmap__card-info li { display: grid; grid-template-columns: 16px 1fr; gap: 10px; align-items: start; }
-.hsmap__card-info svg { width: 16px; height: 16px; margin-top: 1px; fill: none; stroke: currentColor; stroke-width: 1.1; opacity: .7; }
+.hsmap__card-info { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 32px; }
+.hsmap__card-field { min-width: 0; }
+.hsmap__card-info dt { display: flex; align-items: center; gap: 7px; margin: 0 0 7px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); transition: color .5s; }
+.hsmap__card-info dd { margin: 0; font-size: 16px; line-height: 1.45; color: #4a5560; overflow-wrap: anywhere; transition: color .5s; }
+.hsmap__card-info svg { width: 13px; height: 13px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.2; }
 .hsmap__card-info a { color: inherit; text-decoration: none; }
 .hsmap__card-info a:hover { text-decoration: underline; }
-/* «Contact us»: згорнутий (0fr) у неактивних, розгорнутий (1fr) в активній → картка плавно підростає вгору */
-.hsmap__card-cta { display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden; transition: grid-template-rows .6s cubic-bezier(.65, 0, .35, 1), opacity .3s, visibility .6s; }
-.hsmap__card-cta > div { min-height: 0; overflow: hidden; text-align: right; }
-.hsmap__card-cta a { display: inline-flex; align-items: center; gap: 10px; margin-top: 22px; color: inherit; text-decoration: none; font-size: 14px; }
+/* «Contact us»: місце зарезервоване в усіх картках (висота не стрибає), видимий лише в активній */
+.hsmap__card-cta { margin-top: auto; padding-top: 26px; text-align: right; opacity: 0; visibility: hidden; transition: opacity .3s, visibility 0s .3s; }
+.hsmap__card-cta a { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; font-size: 15px; }
 .hsmap__card-cta svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; transition: transform .2s; }
 .hsmap__card-cta a:hover svg { transform: translateX(3px); }
-.hsmap__card.is-active { background: var(--card-ink); color: #fff; padding-top: 26px; box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .45); }
-.hsmap__card.is-active .hsmap__card-info { color: rgba(255, 255, 255, .78); }
-.hsmap__card.is-active .hsmap__card-cta { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition: grid-template-rows .6s cubic-bezier(.65, 0, .35, 1), opacity .4s .25s, visibility 0s; }
+.hsmap__card.is-active { background: var(--card-ink); color: #fff; opacity: 1; transform: none; cursor: default; box-shadow: 0 24px 50px -22px rgba(0, 0, 0, .5); }
+.hsmap__card.is-active .hsmap__card-kicker, .hsmap__card.is-active .hsmap__card-info dt { color: rgba(255, 255, 255, .55); }
+.hsmap__card.is-active .hsmap__card-info dd { color: rgba(255, 255, 255, .88); }
+.hsmap__card.is-active .hsmap__card-cta { opacity: 1; visibility: visible; transition: opacity .4s .2s, visibility 0s; }
+/* під час перетягування — «grab» і без transition'ів масштабу (щоб не «пливло» під пальцем) */
+.hsmap__cards.is-dragging .hsmap__card { cursor: grabbing; }
 
-/* 4 картки: у 4 колонки від 1100px; вужче — горизонтальний список зі snap (активна прокручується у видиму зону) */
 @media (max-width: 1099px) {
-  .hsmap__cards { display: flex; align-items: flex-end; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 30px 0 4px; margin-top: -190px; }
-  .hsmap__cards::-webkit-scrollbar { display: none; }
-  .hsmap__card { flex: 0 0 40%; scroll-snap-align: start; }
+  .hsmap__cards { --cw: min(520px, 62vw); margin-top: -130px; }
 }
 @media (max-width: 760px) {
   .hsmap { padding: 90px 0 56px; }
@@ -96,8 +100,12 @@
   .hsmap__step.is-active { flex-basis: 110px; }
   .hsmap__map { height: 44vh; min-height: 300px; margin-top: 8px; }
   .hsmap__pin-label { font-size: 12px; padding: 7px 9px; }
-  .hsmap__cards { margin-top: 12px; }
-  .hsmap__card { flex-basis: 82%; }
+  .hsmap__cards { --cw: calc(100vw - 84px); --gap: 10px; margin-top: 4px; }
+  .hsmap__card { padding: 26px 24px 24px; }
+  .hsmap__card-city { margin-bottom: 22px; font-size: 28px; }
+  .hsmap__card-info { grid-template-columns: 1fr; gap: 16px; }
+  .hsmap__card-info dd { font-size: 15px; }
+  .hsmap__card-cta { padding-top: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hsmap__step, .hsmap__step i::after, .hsmap__card, .hsmap__card-cta { transition: none !important; }
