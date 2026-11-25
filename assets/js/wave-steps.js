@@ -13,6 +13,7 @@
   const prog = sec.querySelector('.ws-progress');
   const nodes = [...sec.querySelectorAll('.ws-node')];
   const caps = [...sec.querySelectorAll('.ws-caption')];
+  const title = sec.querySelector('.ws-title');
   const N = nodes.length;
 
   /**
@@ -47,21 +48,44 @@
 
     svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
     svg.style.aspectRatio = `${VW} / ${VH}`;
-    track.setAttribute('d', d);
     prog.setAttribute('d', d);
     const total = prog.getTotalLength();
     syncStroke(VW);
     prog.style.strokeDasharray = `${total} ${total}`;
+    // Dashed track = ONLY the not-yet-drawn remainder (no dashes under the solid line → no striped edges).
+    // Pre-joined tails make the per-frame rebuild a string concat instead of a 300-point join.
+    const segs = pts.map((p) => 'L' + p[0].toFixed(2) + ',' + p[1].toFixed(2));
+    const tails = new Array(segs.length + 1);
+    tails[segs.length] = '';
+    for (let i = segs.length - 1; i >= 0; i--) tails[i] = segs[i] + tails[i + 1];
     window.__wsNodeLen = nodeLen; // debug hook for test/ws-crossing.mjs
-    return { total, nodeLen };
+    return { total, nodeLen, pts, cum, tails };
   }
 
-  // Keep the progress stroke ~1.75 screen px regardless of viewBox scale (see CSS note on vector-effect).
+  // Keep strokes a constant screen size regardless of viewBox scale, in USER units (no vector-effect:
+  // with non-scaling-stroke Chrome applies dash arrays/offsets in screen px — see CSS note).
   let vbW = 1200;
+  let k = 1;                        // user units per screen px
   function syncStroke(VW = vbW) {
     vbW = VW;
     const px = svg.getBoundingClientRect().width || VW;
-    prog.style.strokeWidth = (1.75 * VW / px).toFixed(3);
+    k = VW / px;
+    prog.style.strokeWidth = (1.75 * k).toFixed(3);
+    track.style.strokeWidth = (1.5 * k).toFixed(3);
+    track.style.strokeDasharray = `${(2 * k).toFixed(3)} ${(7 * k).toFixed(3)}`; // same 2/7 px dash as before, now in user units
+  }
+
+  /** Rebuild the dashed remainder from length L to the end; dash phase pinned to the full path. */
+  function setTrack(L) {
+    const { pts, cum, tails } = geo;
+    let j = 1;
+    while (j < cum.length && cum[j] <= L) j++;
+    if (j >= cum.length) { track.setAttribute('d', ''); return; }
+    const t = (L - cum[j - 1]) / (cum[j] - cum[j - 1] || 1);
+    const x = pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * t;
+    const y = pts[j - 1][1] + (pts[j][1] - pts[j - 1][1]) * t;
+    track.setAttribute('d', `M${x.toFixed(2)},${y.toFixed(2)}${tails[j]}`);
+    track.style.strokeDashoffset = L.toFixed(2); // offset = L keeps the dots stationary while the start moves
   }
   new ResizeObserver(() => syncStroke()).observe(svg);
 
@@ -95,6 +119,7 @@
     const { total, nodeLen } = geo;
     const L = nodeLen[0] + p * (nodeLen[N - 1] - nodeLen[0]);
     prog.style.strokeDashoffset = total - L;
+    setTrack(L);
     let i = 0;
     for (let k = 1; k < N; k++) if (L >= nodeLen[k] - 0.01) i = k; // −0.01: float tolerance at p = 1
     setActive(i, instant);
@@ -119,19 +144,22 @@
 
     setProgress(0, true);
     const state = { p: 0 };
-    const tween = gsap.to(state, {
-      p: 1,
-      ease: 'none',
-      onUpdate: () => setProgress(state.p),
+    // One pinned, scrubbed timeline (1 unit ≈ 60vh of scroll):
+    //   0 → 1      heading text-fill (shared HS.textFill: letters muted → 100% one by one)
+    //   1 → 1+N    the wave draws, nodes activate
+    const FILL = 1;
+    const tl = gsap.timeline({
       scrollTrigger: {
         trigger: sec,
         pin: true,
         start: 'top top',
-        end: () => '+=' + Math.round(innerHeight * (0.6 * N)), // ~60vh of scroll per stage
+        end: () => '+=' + Math.round(innerHeight * 0.6 * (FILL + N)),
         scrub: 0.6,
         invalidateOnRefresh: true,
       },
     });
-    return () => tween.scrollTrigger && tween.scrollTrigger.kill();
+    const fill = HS.textFill ? HS.textFill(title, { timeline: tl, at: 0, duration: FILL * 0.9 }) : null;
+    tl.to(state, { p: 1, ease: 'none', duration: N, onUpdate: () => setProgress(state.p) }, FILL);
+    return () => { tl.scrollTrigger && tl.scrollTrigger.kill(); tl.kill(); fill && fill.split.revert(); };
   });
 })();

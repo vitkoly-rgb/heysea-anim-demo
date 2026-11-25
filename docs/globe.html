@@ -7,7 +7,8 @@
 <title>HeySea — animation demos</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="assets/css/base.css?v=1794562012">
-<link rel="stylesheet" href="assets/css/globe.css?v=1794565680">
+<link rel="stylesheet" href="assets/css/text-fill.css?v=1795636101">
+<link rel="stylesheet" href="assets/css/globe.css?v=1795637175">
 </head>
 <body>
 <nav class="demo-nav" aria-label="Demos">
@@ -20,8 +21,9 @@
     <span class="demo-label">04 · Globe — live d3-geo canvas, scroll-scrubbed</span>
     <header class="globe__head container">
       <p class="globe__eyebrow">Global Network</p>
-      <h2 class="globe__title" id="globe-title">A growing presence across key yachting markets worldwide.</h2>
-      <p class="globe__lead">Offices and partners in the regions where our owners cruise, berth and buy.</p>
+      <h2 class="globe__title" id="globe-title">A growing presence across key<br><em>yachting markets worldwide.</em></h2>
+      <p class="globe__lead">A worldwide network built to support every Heysea owner.</p>
+      <a class="globe__cta" href="contact.html">Start Your Journey        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></a>
     </header>
 
     <div class="globe__planet" aria-hidden="true">
@@ -31,9 +33,13 @@
           <i class="globe-marker__dot"></i>
           <b class="globe-marker__label">Federal Highway, Boca Raton</b>
         </span>
-                <span class="globe-marker globe-marker--light" data-lat="35.9" data-lng="14.5">
+                <span class="globe-marker globe-marker--light globe-marker--left" data-lat="35.9" data-lng="14.5">
           <i class="globe-marker__dot"></i>
           <b class="globe-marker__label">Howard Street, Malta</b>
+        </span>
+                <span class="globe-marker globe-marker--light globe-marker--right" data-lat="41.01" data-lng="28.98">
+          <i class="globe-marker__dot"></i>
+          <b class="globe-marker__label">Istanbul, Türkiye</b>
         </span>
                 <span class="globe-marker globe-marker--dark" data-lat="23.1" data-lng="113.3">
           <i class="globe-marker__dot"></i>
@@ -46,7 +52,7 @@
 
     <!-- Доступний текстовий список офісів (маркери на глобусі декоративні) -->
     <ul class="visually-hidden-globe">
-      <li>Federal Highway, Boca Raton</li><li>Howard Street, Malta</li><li>Guangdong Province, China</li>    </ul>
+      <li>Federal Highway, Boca Raton</li><li>Howard Street, Malta</li><li>Istanbul, Türkiye</li><li>Guangdong Province, China</li>    </ul>
 
     <dl class="globe__stats container">
             <div class="globe-stat">
@@ -64,7 +70,7 @@
           </dl>
   </div>
 </section>
-<div class="demo-spacer">↓ next block: “Trusted Partners, Around the World”</div>
+<div class="demo-spacer">↓ next block: “Trusted partners, around the world.”</div>
 <footer class="demo-end"><p>End of demos</p></footer>
 </main>
 <script src="vendor/gsap.min.js"></script>
@@ -77,6 +83,7 @@
 <script src="vendor/d3-geo.min.js"></script>
 <script src="vendor/topojson-client.min.js"></script>
 <script src="assets/js/base.js?v=1794562012"></script>
-<script src="assets/js/globe.js?v=1794565722"></script>
+<script src="assets/js/text-fill.js?v=1795636101"></script>
+<script src="assets/js/globe.js?v=1795637183"></script>
 </body>
 </html>

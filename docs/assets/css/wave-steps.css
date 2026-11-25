@@ -11,7 +11,6 @@
 .ws-eyebrow{margin:0 0 14px;font:400 12px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:#8a9097}
 .ws-title{margin:0;font:400 clamp(28px,3.2vw,44px)/1.15 var(--font);letter-spacing:-.015em;color:var(--ws-ink)}
 .ws-title span{display:block}
-.ws-title span em{color:var(--ws-muted)}
 .ws-title em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:0}
 .ws-sub{margin:14px 0 0;font-size:13px;color:#6f7780}
 
@@ -19,7 +18,7 @@
 .ws-wave{position:relative;width:min(1100px,100%);margin-top:clamp(32px,6vh,72px)}
 .ws-svg{display:block;width:100%;height:auto;overflow:visible;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent)}
-.ws-track{fill:none;stroke:var(--ws-line);stroke-width:1.5;stroke-dasharray:2 7;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.ws-track{fill:none;stroke:var(--ws-line);stroke-width:1.5;stroke-linecap:round} /* width + dot pattern set in user units by JS; path = only the not-yet-drawn part */
 /* NO vector-effect here: with non-scaling-stroke Chrome applies dasharray/dashoffset in SCREEN px, while the
    lengths we compare (getTotalLength, node lengths) are in viewBox units → the drawn line ran ahead of the
    nodes by the viewBox scale (≈9% at 1440, 25% at 375). Stroke width is set in user units by JS instead. */

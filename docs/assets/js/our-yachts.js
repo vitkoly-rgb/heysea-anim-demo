@@ -7,7 +7,8 @@
  *   offset = offset₁ / Z     (distance from the centre grows as it approaches → flies outward)
  * Opacity: far photos are hazy (fade in from the depth), near photos dissolve before reaching the camera.
  * Figma photos start exactly at their Figma rect/opacity (t = 0 reproduces the frame 1:1).
- * The italic tail of the title fills grey → navy during the pin.
+ * Title: site-wide text-fill rule (HS.textFill, assets/js/text-fill.js) — the whole heading starts uniformly
+ * muted and fills letter by letter during the pin; the pin only releases after the fill is 100%.
  */
 (() => {
   const section = document.getElementById('our-yachts');
@@ -82,18 +83,18 @@
     }
   }
 
-  // Title tail: split into chars for the grey → navy fill
-  const fillEls = [...section.querySelectorAll('.oy__fill')];
-  const chars = fillEls.flatMap((el) => SplitText.create(el, { type: 'chars', charsClass: 'char' }).chars);
-  const ink = getComputedStyle(section).getPropertyValue('--oy-ink').trim();
+  const title = section.querySelector('.oy__title');
+
+  // pre-decode every photo up front so the first appearance mid-scroll never stalls a frame
+  photos.forEach((p) => p.el.decode && p.el.decode().catch(() => {}));
 
   const state = { t: 0 };
   measure();
   render(0);
 
   if (reduced || !window.ScrollTrigger) {
-    // static Figma composition; title fully legible (navy)
-    gsap.set(chars, { color: ink });
+    // static Figma composition; title fully legible
+    if (HS.textFill) HS.textFill(title); // reduced → sets every letter to 100%
     window.addEventListener('resize', () => { measure(); render(0); });
     return;
   }
@@ -110,6 +111,7 @@
       onRefresh: () => { measure(); render(state.t); },
     },
   });
-  tl.to(state, { t: 1, duration: 1, onUpdate: () => render(state.t) }, 0)
-    .to(chars, { color: ink, duration: 0.03, stagger: 0.035 }, 0.08); // fill spans ≈ 8% → 55% of the pin
+  tl.to(state, { t: 1, duration: 1, onUpdate: () => render(state.t) }, 0);
+  // letters fill from 4% to 88% of the pin → the pin holds until the heading is 100% filled
+  if (HS.textFill) HS.textFill(title, { timeline: tl, at: 0.04, duration: 0.84 });
 })();

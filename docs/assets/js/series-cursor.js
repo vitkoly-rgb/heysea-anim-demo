@@ -2,7 +2,8 @@
  * 01 · Series slider + "ONBOARD" water cursor
  *
  * A) Pinned section; each next panel slides up over the previous one (scrubbed).
- *    The covered panel scales up a bit, drifts and darkens; titles rise via SplitText line masks.
+ *    The covered panel scales up a bit, drifts and darkens. The text block is a FIXED HUD (feadship-style):
+ *    it never moves, only its content flips inside clipping masks; navigation/counter on the right.
  * B) Custom cursor inside the stage: 64px circle with water simulated on a <canvas>
  *    (1D spring columns + neighbour spreading). Mouse velocity/acceleration tilt & ripple the
  *    surface; damping lets it settle flat. rAF only runs while needed and the section is on screen.
@@ -15,7 +16,7 @@
   const stage = section.querySelector('.sc__stage');
   const panels = gsap.utils.toArray('.sc__panel', section);
   const videos = panels.map((p) => p.querySelector('video'));
-  let activeIndex = 0;
+  let activeIndex = 0; // updated from scroll progress (pinned mode)
 
   /* ------------------------------------------------------------------ *
    * A) Scroll: pinned stacked panels
@@ -23,11 +24,22 @@
   if (!reduced && panels.length > 1) {
     section.classList.add('sc--pinned');
 
-    // Split titles into masked lines (re-splits on resize thanks to autoSplit)
-    const splits = panels.map((p) => SplitText.create(p.querySelector('.sc__title'), { type: 'lines', mask: 'lines', linesClass: 'line' }));
+    // HUD = fixed text container. Its items are stacked in clipping masks; only the content flips.
+    const titles = gsap.utils.toArray('.sc__hud-title', section);
+    const texts = gsap.utils.toArray('.sc__hud-text', section);
+    const nums = gsap.utils.toArray('.sc__mask--num > span', section);
+    const ticks = gsap.utils.toArray('.sc__tick', section);
 
     gsap.set(panels.slice(1), { yPercent: 100 });
     gsap.set(panels.slice(1).map((p) => p.querySelector('.sc__media')), { yPercent: -60 });
+    gsap.set([...titles.slice(1), ...nums.slice(1)], { yPercent: 105 });
+    gsap.set(texts.slice(1), { yPercent: 100, autoAlpha: 0 });
+
+    const setActive = (i) => {
+      if (i === activeIndex) return;
+      activeIndex = i;
+      ticks.forEach((t, k) => { t.classList.toggle('is-active', k === i); k === i ? t.setAttribute('aria-current', 'true') : t.removeAttribute('aria-current'); });
+    };
 
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
@@ -38,29 +50,36 @@
         pin: true,
         scrub: 0.6,
         invalidateOnRefresh: true,
-        onUpdate: (st) => { activeIndex = Math.round(st.progress * (panels.length - 1)); },
+        onUpdate: (st) => setActive(Math.round(st.progress * (panels.length - 1))),
       },
     });
 
+    const FLIP = { duration: 0.32, ease: 'power2.inOut' }; // text flip window inside each 1-unit transition
     panels.forEach((panel, i) => {
       if (i === 0) return;
       const prev = panels[i - 1];
       const at = i - 1; // each transition occupies 1 unit of timeline
-      const prevMedia = prev.querySelector('.sc__media');
-      const prevCopy = prev.querySelector('.sc__copy');
-      const copy = panel.querySelector('.sc__copy');
 
-      // incoming panel slides over, its media counter-moves (curtain/parallax feel)
+      // video panels: incoming slides over (media counter-moves), covered one zooms/drifts/darkens
       tl.to(panel, { yPercent: 0, duration: 1 }, at)
         .to(panel.querySelector('.sc__media'), { yPercent: 0, duration: 1 }, at)
-        // covered panel: slight zoom + push + darken, copy leaves upward
-        .to(prevMedia, { scale: 1.12, yPercent: -12, duration: 1 }, at)
+        .to(prev.querySelector('.sc__media'), { scale: 1.12, yPercent: -12, duration: 1 }, at)
         .to(prev.querySelector('.sc__shade'), { opacity: 0.65, duration: 1 }, at)
-        .to(prevCopy, { y: -60, autoAlpha: 0, duration: 0.45 }, at)
-        // incoming copy: title lines rise out of their masks, then text
-        .from(splits[i].lines, { yPercent: 105, duration: 0.4, stagger: 0.06 }, at + 0.55)
-        .from(copy.querySelectorAll('.sc__count, .sc__text, .sc__cta'), { y: 24, autoAlpha: 0, duration: 0.35, stagger: 0.05 }, at + 0.62);
+        // HUD content flip (container itself never moves): old slides up & out, new slides up & in
+        .to(titles[i - 1], { yPercent: -105, ...FLIP }, at + 0.38)
+        .to(titles[i], { yPercent: 0, ...FLIP }, at + 0.38)
+        .to(nums[i - 1], { yPercent: -105, ...FLIP }, at + 0.38)
+        .to(nums[i], { yPercent: 0, ...FLIP }, at + 0.38)
+        .to(texts[i - 1], { yPercent: -100, autoAlpha: 0, ...FLIP }, at + 0.34)
+        .to(texts[i], { yPercent: 0, autoAlpha: 1, ...FLIP }, at + 0.46);
     });
+
+    // navigation (right side): jump to a panel; keyboard-accessible focus targets of the block
+    ticks.forEach((t, i) => t.addEventListener('click', () => {
+      const st = tl.scrollTrigger;
+      const y = st.start + (st.end - st.start) * (i / (panels.length - 1));
+      if (window.HS && HS.lenis) HS.lenis.scrollTo(y, { duration: 1.2 }); else window.scrollTo({ top: y, behavior: 'smooth' });
+    }));
   }
 
   /* Videos: autoplay only while the section is visible (and never under reduced motion). */
@@ -77,7 +96,7 @@
   io.observe(section);
 
   stage.addEventListener('click', (e) => {
-    if (e.target.closest('a')) return; // real links keep working
+    if (e.target.closest('a, button')) return; // real controls keep working
     console.log('[series-cursor] onboard →', panels[activeIndex].dataset.title);
   });
 
@@ -92,7 +111,8 @@
     const canvas = el.querySelector('canvas');
     const ctx = canvas.getContext('2d');
     const SIZE = 64;                  // CSS px
-    const R = SIZE / 2 - 1;           // ring radius
+    const R = SIZE / 2 - 1;           // outer ring radius (the stroke)
+    const RI = R - 5;                 // inner water circle (nested inside the ring with a small gap)
     const REST = SIZE * 0.52;         // flat water line (slightly below centre)
     const N = 22;                     // spring columns
     const K = 120;                    // spring stiffness (pull back to rest)
@@ -218,8 +238,11 @@
       ctx.clearRect(0, 0, SIZE, SIZE);
       ctx.save();
       ctx.beginPath();
-      ctx.arc(SIZE / 2, SIZE / 2, R - 0.5, 0, Math.PI * 2);
+      ctx.arc(SIZE / 2, SIZE / 2, RI, 0, Math.PI * 2);
       ctx.clip();
+      // empty part of the water circle: translucent fill (not fully transparent)
+      ctx.fillStyle = 'rgba(255,255,255,.18)';
+      ctx.fillRect(0, 0, SIZE, SIZE);
       // back wave (mirrored, translucent) gives depth while sloshing. Its opacity and offset scale with
       // the current wave amplitude, so at rest it fully merges into the flat solid water (no visible band).
       let amp = 0;
@@ -235,11 +258,11 @@
       ctx.fillStyle = '#fff';
       ctx.fill();
       ctx.restore();
-      // ring
+      // outer frame ring (stroke only)
       ctx.beginPath();
       ctx.arc(SIZE / 2, SIZE / 2, R, 0, Math.PI * 2);
       ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.3;
       ctx.stroke();
     }
 

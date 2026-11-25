@@ -96,6 +96,10 @@ const scenarios = {
     await page.evaluate(() => document.querySelector('.tl-skip').click());
     await page.waitForTimeout(500);
     console.log('after skip:', JSON.stringify(await page.evaluate(() => ({ y: Math.round(scrollY), afterTop: Math.round(document.getElementById('timeline-after').getBoundingClientRect().top), pinEnd: Math.round(ScrollTrigger.getAll()[0].end) }))));
+    // 6) reverse skip ("‹ Skip back") → above the timeline (pin start − 0.85vh, ≥ 0)
+    await page.evaluate(() => document.querySelector('.tl-back').click());
+    await page.waitForTimeout(500);
+    console.log('after back:', JSON.stringify(await page.evaluate(() => ({ y: Math.round(scrollY), pinStart: Math.round(ScrollTrigger.getAll()[0].start), year: document.querySelector('.tl-dial').getAttribute('aria-valuenow') }))));
     return segs;
   },
   async 'wave-steps'(page, t0) {
@@ -112,12 +116,13 @@ const scenarios = {
     await page.goto('http://localhost:8790/?only=cta-orbits&lenis=0', { waitUntil: 'networkidle' });
     await page.evaluate(() => { const d = document.createElement('div'); d.style.height = '100vh'; document.querySelector('main').prepend(d); ScrollTrigger.refresh(); });
     await page.waitForTimeout(400);
-    const end = await page.evaluate(() => document.getElementById('cta-orbits').getBoundingClientRect().top + scrollY);
+    // Round 5: the CTA pins while its title fills → scroll in, through the pin, and a bit past it
+    const end = await page.evaluate(() => { const st = ScrollTrigger.getAll().find((s) => s.pin); return st ? st.end : document.getElementById('cta-orbits').getBoundingClientRect().top + scrollY; });
     await startMeasure(page);
     const from = (Date.now() - t0) / 1000;
-    await smoothScroll(page, 0, end, 3500);
-    await page.waitForTimeout(2500);
-    return [{ name: 'scroll+orbits', from, dur: 6, fps: 2 }];
+    await smoothScroll(page, 0, end + 120, 5000);
+    await page.waitForTimeout(1500);
+    return [{ name: 'scroll+orbits', from, dur: 6.4, fps: 2.5 }];
   },
 };
 

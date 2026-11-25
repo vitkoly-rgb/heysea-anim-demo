@@ -11,6 +11,7 @@ $tl = [
     'start'      => 2008,  // first year; in pinned scroll mode the top of the pin = first year, so keep it in sync
     'autoplay'  => 8000,   // ms per year; 0 = off (production: 30000–120000)
     'skip_text' => 'Skip Timeline',
+    'back_text' => 'Skip back',   // reverse skip: jumps above the timeline
     'items'     => [
         ['year' => 2008, 'text' => 'Heysea is founded in Guangdong by a small team of naval engineers with a single 20-metre mould and a big idea: build yachts the way shipyards build ships.'],
         ['year' => 2009, 'text' => 'The first hull leaves the shed. The Heysea 62 is delivered to a private owner in Hong Kong and becomes the yard\'s calling card in the region.'],
@@ -32,12 +33,19 @@ $tl = [
         ['year' => 2025, 'text' => 'A second yard opens on the Pearl River estuary, doubling capacity for 30–50 metre custom builds.'],
     ],
 ];
+// Demo photos (production: ACF image field per year). 16 Our-Yachts frames + 2 sea frames.
+foreach ($tl['items'] as $i => &$it) {
+    $it['img'] = $i < 16 ? 'assets/img/our-yachts/raw-' . ($i + 1) . '.jpg' : 'assets/img/photo-' . ($i - 15) . '.jpg';
+    $it['img_alt'] = 'Heysea, ' . $it['year'];
+}
+unset($it);
 $tl_years = array_column($tl['items'], 'year');
 $tl_start = array_search($tl['start'], $tl_years, true);
 if ($tl_start === false) $tl_start = 0;
 $tl_total = count($tl['items']);
 $e = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 ?>
+<div id="timeline-before" aria-hidden="true"></div>
 <section id="timeline" class="demo-sec tl" data-autoplay="<?= (int) $tl['autoplay'] ?>" data-start="<?= (int) $tl_start ?>" aria-roledescription="timeline" aria-label="Brand history">
   <span class="demo-label">03 · Timeline compass</span>
 
@@ -113,6 +121,15 @@ $e = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
       </div>
     </div>
 
+    <!-- Photo per year: only the active one gets src up front; JS loads neighbours on demand (data-src) -->
+    <div class="tl-photos">
+      <?php foreach ($tl['items'] as $i => $it): ?>
+        <img class="tl-photo<?= $i === $tl_start ? ' is-active' : '' ?>" data-index="<?= $i ?>" alt="<?= $e($it['img_alt']) ?>"
+             <?= $i === $tl_start ? 'src' : 'data-src' ?>="<?= $e($it['img']) ?>" decoding="async" width="600" height="400">
+      <?php endforeach; ?>
+    </div>
+
+    <a class="tl-back" href="#timeline-before"><span aria-hidden="true">‹</span> <?= $e($tl['back_text']) ?></a>
     <a class="tl-skip" href="#timeline-after"><?= $e($tl['skip_text']) ?> <span aria-hidden="true">›</span></a>
   </div>
 </section>

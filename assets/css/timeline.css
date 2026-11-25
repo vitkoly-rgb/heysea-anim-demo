@@ -6,9 +6,11 @@
      --cx : horizontal position of the dial center inside the stage
    ========================================================================== */
 .tl{
-  --tl-ink:#0d1b2a; --tl-muted:#a9afb6; --tl-ring:#eceff3; --tl-bg:#f7f9fb;
-  overflow:hidden; background:var(--tl-bg);
+  /* Round 5: DARK theme (designer) — navy block, light text / ring / ticks */
+  --tl-bg:var(--navy); --tl-ink:#fff; --tl-muted:rgba(255,255,255,.45); --tl-ring:rgba(255,255,255,.045);
+  overflow:hidden; background:var(--tl-bg); color:var(--tl-ink);
 }
+.tl .demo-label{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
 .tl .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 .tl-stage{position:relative;min-height:max(100vh,680px);display:flex;align-items:center}
@@ -21,12 +23,12 @@
   border-radius:50%; outline:none; touch-action:pan-y; cursor:grab; user-select:none; -webkit-user-select:none;
 }
 .tl-dial.is-dragging{cursor:grabbing}
-.tl-dial:focus-visible .tl-pointer__dot{stroke:var(--navy);stroke-width:3}
+.tl-dial:focus-visible .tl-pointer__dot{stroke:#fff;stroke-width:3}
 .tl-ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 .tl-ring__band{fill:none;stroke:var(--tl-ring);stroke-width:70}
-.tl-ring__edge{fill:none;stroke:#e2e5e8;stroke-width:1}
-.tl-ring__ticks line{stroke:#cfd4d9;stroke-width:1.2;vector-effect:non-scaling-stroke}
-.tl-ring__ticks line.is-major{stroke:#9aa2ab;stroke-width:1.6}
+.tl-ring__edge{fill:none;stroke:rgba(255,255,255,.1);stroke-width:1}
+.tl-ring__ticks line{stroke:rgba(255,255,255,.2);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.tl-ring__ticks line.is-major{stroke:rgba(255,255,255,.5);stroke-width:1.6}
 .tl-pointer__dot{fill:var(--tl-bg);stroke:var(--tl-ink);stroke-width:2;vector-effect:non-scaling-stroke}
 .tl-pointer__core{fill:var(--tl-ink)}
 .tl-pointer__shaft,.tl-pointer__head{fill:none;stroke:var(--tl-ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
@@ -35,8 +37,8 @@
 .tl-years{list-style:none;margin:0;padding:0}
 .tl-year{
   position:absolute; left:50%; top:50%;
-  font:300 15px/1 var(--font); letter-spacing:.02em; color:#7d858e;
-  background:none; border:0; padding:6px 8px; margin:-14px 0 0 -22px; cursor:pointer;
+  font:300 15px/1 var(--font); letter-spacing:.02em; color:rgba(255,255,255,.6);
+  background:none; border:0; padding:6px 8px; cursor:pointer; /* no margin: JS centers with translate(-50%,-50%); an old margin offset made the flyer land 22px off → visible jump */
   will-change:transform,opacity;
 }
 .tl-year:hover{color:var(--tl-ink)}
@@ -59,11 +61,11 @@
 /* ---- Copy column --------------------------------------------------------- */
 .tl-grid{position:relative;z-index:2;pointer-events:none}
 .tl-copy{width:min(400px,100%);pointer-events:auto}
-.tl-eyebrow{margin:0 0 14px;font:400 12px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:#8a9097}
+.tl-eyebrow{margin:0 0 14px;font:400 12px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5)}
 .tl-heading{font:400 clamp(24px,2.2vw,32px)/1.2 var(--font);letter-spacing:-.01em;margin:0 0 22px;color:var(--tl-ink)}
 .tl-heading em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:0;color:var(--tl-muted)}
 .tl-texts{display:grid}
-.tl-text{grid-area:1/1;font-size:14px;line-height:1.55;color:#4a525b}
+.tl-text{grid-area:1/1;font-size:14px;line-height:1.55;color:rgba(255,255,255,.72)}
 .tl-text p{margin:0}
 .tl:not(.is-ready) .tl-text:not(.is-active){visibility:hidden;opacity:0}
 
@@ -72,23 +74,35 @@
 .tl-counter__num{font:300 18px/1 var(--font);color:var(--tl-ink);font-variant-numeric:tabular-nums}
 .tl-counter__tot{color:var(--tl-muted)}
 .tl-counter__cur{display:inline-block}
-.tl-progress{position:relative;display:block;height:1px;background:var(--line)}
+.tl-progress{position:relative;display:block;height:1px;background:rgba(255,255,255,.2)}
 .tl-progress__bar{position:absolute;inset:-0.5px 0;background:var(--tl-ink);transform-origin:0 50%;transform:scaleX(0)}
-.tl.is-paused .tl-progress__bar{background:#6d7680}
+.tl.is-paused .tl-progress__bar{background:rgba(255,255,255,.55)}
 .tl-arrows{display:flex;gap:8px}
 .tl-btn{
-  width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--tl-bg);color:var(--tl-ink);
+  width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:transparent;color:var(--tl-ink);
   display:grid;place-items:center;cursor:pointer;transition:border-color .2s,background .2s;
 }
 .tl-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .tl-btn:hover{border-color:var(--tl-ink)}
-.tl-btn:focus-visible,.tl-skip:focus-visible,.tl-year:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
+.tl-btn:focus-visible,.tl-skip:focus-visible,.tl-back:focus-visible,.tl-year:focus-visible{outline:2px solid #fff;outline-offset:3px}
 
 .tl-skip{
   position:absolute; right:clamp(16px,6vw,96px); bottom:48px; z-index:3;
   font-size:13px; color:var(--tl-ink); text-decoration:none;
 }
-.tl-skip:hover{text-decoration:underline}
+.tl-back{
+  position:absolute; left:calc((100% - min(1280px, 100% - 32px)) / 2); bottom:48px; z-index:3;
+  font-size:13px; color:var(--tl-muted); text-decoration:none;
+}
+.tl-skip:hover,.tl-back:hover{text-decoration:underline;color:var(--tl-ink)}
+
+/* ---- Photo per year (crossfade), under the big year ---------------------- */
+.tl-photos{
+  position:absolute; z-index:2; right:clamp(16px,6vw,96px); top:calc(50% + 96px);
+  width:min(300px,22vw); aspect-ratio:3/2; overflow:hidden; border-radius:2px; background:rgba(255,255,255,.04);
+}
+.tl-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;visibility:hidden}
+.tl-photo.is-active{opacity:1;visibility:visible}
 
 /* ---- Mobile: dial above, peeking from the left edge; copy below ---------- */
 @media (max-width:767px){
@@ -102,5 +116,7 @@
   .tl-heading{font-size:22px;margin-bottom:14px}
   .tl-text{font-size:13px}
   .tl-controls{margin-top:20px}
-  .tl-skip{top:46px;bottom:auto;right:16px}
+  .tl-skip{top:auto;bottom:18px;right:16px}
+  .tl-back{top:auto;bottom:18px;left:16px}
+  .tl-photos{top:72px;right:16px;width:120px} /* top-right: clear of the ring labels the flyers land on */
 }

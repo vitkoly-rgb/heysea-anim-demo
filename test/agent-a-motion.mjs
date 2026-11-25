@@ -81,8 +81,38 @@ if (which === 'oy' || which === 'all') {
   console.log(OUT + 'motion-our-yachts-sheet.jpg');
 }
 
-if (which === 'cursor' || which === 'all') {
+if (which === 'sc' || which === 'all') {
+  // Series slider: fixed HUD text flip. Frame-time probe through the whole pin, then 16 frames of the
+  // first transition, cropped to the lower part (HUD copy left + nav/counter right).
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  const errors = []; page.on('pageerror', (e) => errors.push(String(e)));
+  await page.goto('http://localhost:8790/?only=series-cursor', { waitUntil: 'networkidle' }); // Lenis on
+  await page.mouse.move(1300, 200); await page.waitForTimeout(600);
+  await startProbe(page);
+  for (let i = 0; i < 90; i++) { await page.mouse.wheel(0, 30); await page.waitForTimeout(33); }
+  await page.waitForTimeout(1000);
+  await stopProbe(page, 'series slider pinned + HUD flip (Lenis on, 1440x900, videos playing)');
+  await page.evaluate(() => (window.HS && HS.lenis ? HS.lenis.scrollTo(0, { immediate: true }) : scrollTo(0, 0)));
+  await page.waitForTimeout(1200);
+  const frames = [];
+  for (let i = 0; i < 16; i++) {
+    for (let k = 0; k < 2; k++) { await page.mouse.wheel(0, 32); await page.waitForTimeout(16); }
+    await page.waitForTimeout(40);
+    const f = `${OUT}tmp-s-${String(i).padStart(2, '0')}.png`;
+    await page.screenshot({ path: f, clip: { x: 0, y: 520, width: 1440, height: 380 } }); frames.push(f);
+  }
+  console.log(errors.length ? 'ERRORS ' + errors.join('\n') : 'series: no page errors');
+  await ctx.close();
+  execFileSync(FF, ['-v', 'error', '-y', '-framerate', '1', '-i', OUT + 'tmp-s-%02d.png', '-vf', 'scale=480:-1,tile=4x4:padding=4:color=black', '-frames:v', '1', OUT + 'motion-series-hud-sheet.jpg']);
+  frames.forEach((f) => fs.unlinkSync(f));
+  console.log(OUT + 'motion-series-hud-sheet.jpg');
+}
+
+if (which === 'cursor' || which === 'all') {
+  // headless Chrome here: in a headed window the real OS mouse can hover the window and move the cursor
+  const hb = await chromium.launch({ channel: 'chrome' });
+  const ctx = await hb.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   const errors = []; page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto('http://localhost:8790/?only=series-cursor&lenis=0', { waitUntil: 'networkidle' });
@@ -108,8 +138,7 @@ if (which === 'cursor' || which === 'all') {
   for (let i = 0; i < 180; i++) { const a = i / 15; await page.mouse.move(720 + Math.cos(a) * 200, 450 + Math.sin(a) * 120); await page.waitForTimeout(16); }
   await stopProbe(page, 'water cursor continuous motion 3s');
   console.log(errors.length ? 'ERRORS ' + errors.join('\n') : 'cursor: no page errors');
-  await ctx.close();
-  const list = OUT + 'tmp-c-list.txt';
+  await ctx.close(); await hb.close();
   execFileSync(FF, ['-v', 'error', '-y', '-framerate', '1', '-i', OUT + 'tmp-c-%02d.png', '-vf', 'tile=4x4:padding=4:color=white', '-frames:v', '1', OUT + 'motion-cursor-sheet.jpg']);
   frames.forEach((f) => fs.unlinkSync(f));
   console.log(OUT + 'motion-cursor-sheet.jpg  (' + frames.length + ' frames: rest, small×3, settle×4, fast, after-fast×6, rest)');

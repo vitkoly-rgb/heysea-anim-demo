@@ -18,7 +18,7 @@ $hsmap = [
             'email' => 'info@heysea.com',
         ],
         [
-            'label' => 'Howard Street, Malta',
+            'label' => 'Howard Street, Malta', 'side' => 'left',
             'kicker' => 'HeySea Europe', 'city' => 'Malta',
             'lat' => 35.90, 'lng' => 14.50, 'zoom' => 1.35,
             'address' => '11/158 Howard Street, Malta',
@@ -30,6 +30,13 @@ $hsmap = [
             'lat' => 26.36, 'lng' => -80.08, 'zoom' => 1.3,
             'address' => '1200N Federal Hwy Suite 300 Boca Raton FL33432 USA',
             'email' => 'chris@heysea.com',
+        ],
+        [
+            'label' => 'Istanbul, Türkiye', 'side' => 'right',   // side: де тег відносно точки (Malta й Istanbul поруч)
+            'kicker' => 'HeySea Europe & Asia', 'city' => 'Istanbul, Türkiye',
+            'lat' => 41.01, 'lng' => 28.98, 'zoom' => 1.4,
+            'address' => 'Placeholder: Levent Mah., Büyükdere Cad. No. 000, Beşiktaş, Istanbul, Türkiye',   // TODO: реальна адреса
+            'email' => 'turkiye@heysea.example',                                                            // TODO
         ],
     ],
 ];
@@ -80,7 +87,7 @@ $hsmapIcon = [
     </svg>
     <div class="hsmap__pins">
       <?php foreach ($hsmap['offices'] as $i => $o): ?>
-      <button type="button" class="hsmap__pin" data-i="<?= $i ?>" aria-label="Show <?= $e($o['label']) ?> office" tabindex="-1">
+      <button type="button" class="hsmap__pin<?= !empty($o['side']) ? ' hsmap__pin--' . $e($o['side']) : '' ?>" data-i="<?= $i ?>" aria-label="Show <?= $e($o['label']) ?> office" tabindex="-1">
         <i class="hsmap__pin-dot"></i><span class="hsmap__pin-label"><?= $e($o['label']) ?></span>
       </button>
       <?php endforeach; ?>

@@ -30,6 +30,30 @@
       },
     });
 
+    // appear: each column fades in from transparency (+ slight drift) as it enters from the right edge,
+    // so upcoming columns are invisible until they arrive. Computed from the track's live x on every
+    // update (deterministic; containerAnimation triggers mis-measured inside this pinned + matchMedia setup).
+    // A column is fully visible once its left edge reaches 72% of the viewport — or its final resting
+    // position for the last columns, which never travel that far left. Columns already in view at the
+    // start are fully visible, so the first frame matches Figma.
+    const cols = gsap.utils.toArray('.qr__col', section);
+    const appear = () => {
+      const vw = document.documentElement.clientWidth;
+      const x = gsap.getProperty(track, 'x');
+      const dist = distance();
+      for (const col of cols) {
+        const left = col.offsetLeft + x;                  // offsetParent = track (transformed)
+        const done = Math.max(vw * 0.72, col.offsetLeft - dist - 1);
+        const p = gsap.utils.clamp(0, 1, (vw - left) / Math.max(1, vw - done));
+        col.style.opacity = p.toFixed(3);
+        col.style.visibility = p > 0 ? 'visible' : 'hidden';
+        col.style.translate = `${((1 - p) * 60).toFixed(1)}px 0`;
+      }
+    };
+    move.eventCallback('onUpdate', appear);
+    ScrollTrigger.addEventListener('refresh', appear);
+    appear();
+
     // keyboard: focusing a QR link scrolls the page so that its column is inside the viewport
     const onFocus = (e) => {
       const col = e.target.closest('.qr__col');
@@ -45,6 +69,8 @@
 
     return () => {
       section.classList.remove('qr--pinned');
+      ScrollTrigger.removeEventListener('refresh', appear);
+      cols.forEach((c) => { c.style.opacity = c.style.visibility = c.style.translate = ''; });
       track.removeEventListener('focusin', onFocus);
     };
   });

@@ -16,8 +16,10 @@ const info = await page.evaluate(() => {
   const st = ScrollTrigger.getAll().find((s) => s.trigger && s.trigger.id === 'wave-steps');
   return { start: st.start, end: st.end };
 });
-for (const [k, frac] of [[1, 1 / 3], [2, 2 / 3]]) {
-  for (const [lbl, d] of [['before', -0.02], ['at', 0.004]]) {
+// Round 5: the pinned timeline is [heading fill: 1 unit][wave: N units] → node k sits at (1 + k/(N-1)·N)/(N+1)
+const NN = 4;
+for (const [k, frac] of [1, 2].map((k) => [k, (1 + (k / (NN - 1)) * NN) / (NN + 1)])) {
+  for (const [lbl, d] of [['before', -0.016], ['at', 0.003]]) {
     await page.evaluate((y) => scrollTo(0, y), Math.round(info.start + (frac + d) * (info.end - info.start)));
     await page.waitForTimeout(1500); // let scrub settle
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));

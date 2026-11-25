@@ -91,7 +91,6 @@
 
   // ---- Render the dial for the current rotation ---------------------------
   const smooth = (e0, e1, x) => { const t = Math.min(Math.max((x - e0) / (e1 - e0), 0), 1); return t * t * (3 - 2 * t); };
-  const flying = new Set();       // indices whose ring label is currently represented by a flyer
 
   /** Ring-label geometry for year i at the current rotation (px, relative to the dial center). */
   function labelState(i) {
@@ -113,27 +112,47 @@
     for (let i = 0; i < N; i++) {
       const { x, y, o, s } = labelState(i);
       const el = yearBtns[i];
-      const op = flying.has(i) ? 0 : o;
+      const op = flyers.has(i) ? 0 : o;
       el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%) scale(${s.toFixed(3)})`;
       el.style.opacity = op.toFixed(3);
       el.style.visibility = op < 0.02 ? 'hidden' : 'visible';
     }
-    if (flight) flight.update();
+    flyers.forEach(updateFlyer); // flyers that ride with the dial need the new rotation
   }
 
   // ---- Shared-element transition: ring label <-> big year -----------------
-  // Two "flyers" (clones styled like the big year) interpolate every frame between the big slot
-  // and the *live* ring position of their label (which itself moves while the dial rotates):
-  //   new year : ring label  -> big slot  (scale up, muted -> ink)
-  //   old year : big slot    -> ring label (scale down, ink -> muted)
-  // The real big year and both ring labels are hidden during the flight, so the hand-off is seamless.
+  // Each flying year is an independent "flyer" (a clone styled like the big year) animated in POLAR
+  // coordinates around the dial center, so it travels one continuous curved path:
+  //   mode 'in'  : ring label  -> big slot   (scale up, muted -> full)
+  //   mode 'out' : big slot    -> ring label (scale down, rides along with the rotating dial)
+  // A flyer that is interrupted mid-flight (fast scroll, rapid clicks) is *re-targeted* from its current
+  // state instead of being snapped to the end — no pauses, no jumps, in both directions.
   const bigTxt = big.querySelector('.tl-big__txt');
   const COLOR_SMALL = getComputedStyle(yearBtns[0]).color;
   const COLOR_BIG = getComputedStyle(big).color;
   const mixColor = gsap.utils.interpolate(COLOR_SMALL, COLOR_BIG);
-  let flight = null;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const DEG = Math.PI / 180;
+  const flyers = new Map();       // year index -> flyer
+  let bigSlot = null;             // {ang, r} of the big year's center, measured on demand
+  let fontRatio = 0.12;           // small label font-size / big font-size
 
-  function makeFlyer(text) {
+  function measure() {
+    const dr = dial.getBoundingClientRect(), br = bigTxt.getBoundingClientRect();
+    const x = br.left + br.width / 2 - (dr.left + dr.width / 2);
+    const y = br.top + br.height / 2 - (dr.top + dr.height / 2);
+    bigSlot = { ang: Math.atan2(y, x) / DEG, r: Math.hypot(x, y) };
+    fontRatio = parseFloat(getComputedStyle(yearBtns[0]).fontSize) / parseFloat(getComputedStyle(big).fontSize);
+  }
+  const clampAng = (a) => Math.max(-110, Math.min(110, a)); // far years fly in/out from the dial's edge, not via a full spin
+  /** Polar state of year i's ring label right now. c = 0 (muted) … 1 (big). */
+  function labelPolar(i) {
+    const l = labelState(i);
+    return { ang: clampAng(rot.a - i * STEP), r: W * LABEL_R, s: fontRatio * l.s, o: l.o, c: 0 };
+  }
+  const bigPolar = () => ({ ang: bigSlot.ang, r: bigSlot.r, s: 1, o: 1, c: 1 });
+
+  function makeFlyerEl(text) {
     const f = document.createElement('span');
     f.className = 'tl-fly';
     f.setAttribute('aria-hidden', 'true');
@@ -143,53 +162,102 @@
     return f;
   }
 
-  function endFlight() {
-    if (!flight) return;
-    flight.tween.kill();
-    flight.els.forEach((el) => el.remove());
-    flying.clear();
-    bigTxt.textContent = years[cur];
-    big.style.visibility = '';
-    flight = null;
+  function updateFlyer(f) {
+    const e = f.st.t;
+    const tgt = f.mode === 'in' ? bigPolar() : labelPolar(f.idx);
+    // 'out' rides with the dial: keep the start offset relative to the label's live angle, decaying to 0.
+    const ang = f.mode === 'in' ? lerp(f.from.ang, tgt.ang, e) : tgt.ang + (f.from.ang - f.live0) * (1 - e);
+    const st = {
+      ang,
+      r: lerp(f.from.r, tgt.r, e),
+      s: lerp(f.from.s, tgt.s, e),
+      o: lerp(f.from.o, tgt.o, e),
+      c: lerp(f.from.c, tgt.c, e),
+    };
+    f.cur = st;
+    const x = Math.cos(st.ang * DEG) * st.r, y = Math.sin(st.ang * DEG) * st.r;
+    f.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%) scale(${st.s.toFixed(4)})`;
+    f.el.style.opacity = st.o.toFixed(3);
+    f.el.style.color = mixColor(st.c);
+  }
+
+  function syncBigVisibility() {
+    // The big number is shown only when no flyer represents the current year.
+    big.style.visibility = [...flyers.values()].some((f) => f.mode === 'in') ? 'hidden' : '';
+  }
+
+  function finishFlyer(f) {
+    f.tween.kill();
+    f.el.remove();
+    flyers.delete(f.idx);
+    if (f.mode === 'in') bigTxt.textContent = years[f.idx];
+    syncBigVisibility();
     render();
   }
 
-  function flyYear(from, to, duration) {
-    endFlight();                                 // rapid input: settle the previous flight first
-    bigTxt.textContent = years[to];
-    if (reduced || duration <= 0) { render(); return; }
+  /** Start (or re-target) a flyer for year idx. */
+  function launch(idx, mode, duration, startState, fresh) {
+    let f = flyers.get(idx);
+    if (f) f.tween.kill();
+    else { f = { idx, el: makeFlyerEl(years[idx]) }; flyers.set(idx, f); }
+    f.mode = mode;
+    f.from = startState;
+    f.live0 = clampAng(rot.a - idx * STEP);
+    f.st = { t: 0 };
+    f.tween = gsap.to(f.st, {
+      t: 1,
+      duration,
+      // fresh flights share the dial's ease (so an 'in' flyer tracks its label exactly);
+      // re-targeted flyers are already moving, so they decelerate only
+      ease: fresh ? 'power2.inOut' : 'power2.out',
+      onUpdate: () => updateFlyer(f),
+      onComplete: () => finishFlyer(f),
+    });
+    updateFlyer(f);
+  }
 
-    // Big slot center + scale ratio, measured once per flight.
-    const dr = dial.getBoundingClientRect(), br = bigTxt.getBoundingClientRect();
-    const bx = br.left + br.width / 2 - (dr.left + dr.width / 2);
-    const by = br.top + br.height / 2 - (dr.top + dr.height / 2);
-    const ratio = parseFloat(getComputedStyle(yearBtns[0]).fontSize) / parseFloat(getComputedStyle(big).fontSize);
-    const inF = makeFlyer(years[to]), outF = makeFlyer(years[from]);
-    const startO = Math.max(labelState(to).o, 0.35); // a label sitting near the pointer is faded — don't start invisible
-    const lerp = gsap.utils.interpolate;
-    const place = (el, x, y, sc, o, t) => {
-      el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%) scale(${sc.toFixed(4)})`;
-      el.style.opacity = o.toFixed(3);
-      el.style.color = mixColor(t);
-    };
-    const state = { t: 0 };
-    flying.add(from); flying.add(to);
-    big.style.visibility = 'hidden';
-    flight = {
-      els: [inF, outF],
-      update() {
-        const t = state.t;
-        const a = labelState(to), b = labelState(from);
-        place(inF, lerp(a.x, bx, t), lerp(a.y, by, t), lerp(ratio * a.s, 1, t), lerp(startO, 1, t), t);
-        place(outF, lerp(bx, b.x, t), lerp(by, b.y, t), lerp(1, ratio * b.s, t), lerp(1, b.o, t), 1 - t);
-      },
-      tween: gsap.to(state, {
-        t: 1, duration, ease: 'power2.inOut',
-        onUpdate: () => flight && flight.update(),
-        onComplete: endFlight,
-      }),
-    };
-    render(); // hide both ring labels in the same frame the flyers appear (no doubled-text frame)
+  function killFlyers() {
+    flyers.forEach((f) => { f.tween.kill(); f.el.remove(); });
+    flyers.clear();
+  }
+
+  function flyYear(from, to, duration) {
+    if (reduced || duration <= 0) {
+      killFlyers();
+      bigTxt.textContent = years[to];
+      syncBigVisibility();
+      render();
+      return;
+    }
+    measure();
+    // Previous year: leaves the big slot (or, if it was itself still flying in, turns around mid-air).
+    const fPrev = flyers.get(from);
+    if (fPrev) launch(from, 'out', duration, fPrev.cur, false);
+    else launch(from, 'out', duration, bigPolar(), true);
+    // Any other year still heading for the big slot turns back to the ring.
+    flyers.forEach((f) => { if (f.mode === 'in' && f.idx !== to) launch(f.idx, 'out', duration, f.cur, false); });
+    // New year: from its ring label (or from wherever its flyer currently is).
+    const fTo = flyers.get(to);
+    if (fTo) launch(to, 'in', duration, fTo.cur, false);
+    else { const lp = labelPolar(to); lp.o = Math.max(lp.o, 0.35); launch(to, 'in', duration, lp, true); }
+    syncBigVisibility();
+    render(); // hide the ring labels in the same frame the flyers appear (no doubled-text frame)
+  }
+
+  // ---- Photo per year: crossfade; images load lazily (current + neighbours) ----
+  const photos = [...sec.querySelectorAll('.tl-photo')];
+  function ensurePhoto(i) {
+    const img = photos[i];
+    if (img && !img.src && img.dataset.src) img.src = img.dataset.src;
+  }
+  function swapPhoto(from, to, instant = false) {
+    if (!photos.length) return;
+    [to, to - 1, to + 1].forEach(ensurePhoto);
+    const a = photos[from], b = photos[to];
+    a.classList.remove('is-active'); b.classList.add('is-active');
+    if (reduced || instant) { gsap.set(a, { autoAlpha: 0 }); gsap.set(b, { autoAlpha: 1, scale: 1 }); return; }
+    gsap.to(a, { autoAlpha: 0, duration: 0.6, ease: 'power1.inOut', overwrite: true });
+    gsap.fromTo(b, { autoAlpha: 0, scale: 1.06 }, { autoAlpha: 1, scale: 1, duration: 0.9, ease: 'power2.out', overwrite: true });
   }
 
   // ---- Copy crossfade -------------------------------------------------------
@@ -235,6 +303,7 @@
     cur = i;
     flyYear(prev, i, rotateTo(i, instant));
     swapText(prev, i, instant);
+    swapPhoto(prev, i, instant);
     curEl.textContent = i + 1;
     dial.setAttribute('aria-valuenow', years[i]);
     dial.setAttribute('aria-valuetext', years[i]);
@@ -372,8 +441,23 @@
     target.focus({ preventScroll: true });
   });
 
+  // ---- Reverse skip: jump back above the timeline (mirror of "Skip Timeline") ----
+  const back = $('.tl-back');
+  back && back.addEventListener('click', (e) => {
+    e.preventDefault();
+    const marker = document.querySelector(back.getAttribute('href'));
+    const top = marker ? marker.getBoundingClientRect().top + scrollY : 0;
+    const y = Math.max(0, top - innerHeight * 0.85);   // land with the previous section in view
+    if (HS.lenis) HS.lenis.scrollTo(y, { immediate: true, force: true });
+    else window.scrollTo(0, y);
+    // focus something sensible above (the marker itself is not focusable)
+    (marker && marker.previousElementSibling && marker.previousElementSibling.querySelector('a,button,[tabindex]'))?.focus({ preventScroll: true });
+  });
+
   // ---- Init ------------------------------------------------------------------------
   texts.forEach((t, i) => gsap.set(t, { autoAlpha: i === cur ? 1 : 0 }));
+  photos.forEach((p, i) => gsap.set(p, { autoAlpha: i === cur ? 1 : 0 }));
+  [cur - 1, cur + 1].forEach(ensurePhoto);
   sec.classList.add('is-ready');
   render();
 

@@ -320,3 +320,95 @@ Wall-clock: **13:23 → 13:32, about 9 min** (3 visual iterations plus motion QA
 - The eyebrow is a grey uppercase label.
 - Inactive cards are white on the light background with a soft shadow. The active card stays `#222`, as requested in Round 3.
 - The tests pass again at 1440 and 375 with no console errors (see `shots/map-1440-flight-end.png`).
+
+---
+
+# Round 5: designer feedback and the signed-off Figma ("For signature")
+
+Wall-clock: **21:47 → 22:08, about 21 min.**
+- Sources: the sign-off pages, read through Figma MCP (`06 Global Network · Rotation 01–06`, `08 Brochure Request · animation 01–16`, mobile 01–10), and `recheck-work/forsign-captions.md`.
+- The text-fill uses the shared `HS.textFill` (agent A). It is loaded globally from `index.php`, so I removed my local includes.
+
+## Globe (3 iterations)
+- **Look follows the sign-off.**
+  - Navy background `#0c2b50`, a dark-blue planet with lighter land, and a faint light rim.
+  - The heading is white, with an accent line "*yachting markets worldwide.*" in italic serif.
+  - Added a lead line and a "Start Your Journey" button.
+  - Labels are light tags; Guangdong is dark. A 4th office, **Istanbul, Türkiye**, is added. Malta's tag sits left of its dot and Istanbul's sits right, so they don't overlap.
+- **Order of events.**
+  1. The heading **text-fill** runs first inside the pin (0–15 %), while only the top of the planet shows (Rotation 01).
+  2. The planet rises **higher**: its centre ends at about 58 % of the screen height, so the centre is visible (Rotation 02).
+  3. A **gentle turn** of about 110° (from the Atlantic to Asia, matching Rotation 02→05) replaces the previous sweep of over 200°.
+  4. The planet moves up, its lower part dissolves into navy, and the stats appear (Rotation 05–06).
+- **Smoothness.**
+  - `scrub: 1`.
+  - The timeline only moves the **target angle**. A separate `gsap.ticker` loop eases the current angle toward the target on every frame. The easing does not depend on frame rate (`1-(1-0.09)^(dt/16.7)`), so stepped mouse-wheel scrolling no longer causes jerks.
+  - The canvas redraws every frame while the angle is still moving and stops once it settles. The loop runs only while the section is near the screen (IntersectionObserver).
+  - The pulsing points are CSS animation, independent of scroll.
+
+## Map (2 iterations)
+- **4 offices:** "Istanbul, Türkiye" / card "HEYSEA EUROPE & ASIA / Istanbul, Türkiye" with a placeholder address and email (TODO).
+- **4 stretching steps:** 140/45/45/45. The timer cycles through all 4, and the test confirms the widths `140/45/45/45 → … → 45/45/45/140`.
+- **Layout:**
+  - At 1100 px and wider, the cards sit in 4 columns. At 1440 this fits without scrolling, and the active card is still raised.
+  - Below 1100 px they become a horizontal scroll-snap list (40 % width on tablet, 82 % on mobile). The active card scrolls into view and the raised card is not clipped (`align-items: flex-end` plus top padding).
+- **Map tags:** Malta's tag is to the left of its pin and Istanbul's to the right; they no longer overlap.
+
+## Book: 16 sign-off states, 8 spreads (4 iterations)
+- **Format:** landscape pages, 1.4 : 1, so the spread is about 2.8 : 1 and about 82 % of the width at 1440, as in the sign-off. The background is `#f7f9fb`. The heading is "A closer look at every model, *brought to life.*" with a serif accent.
+- **Sequence**, with sign-off state numbers in brackets:
+  1. Text grey with the brochure below (01).
+  2. Text-fill 50 % → 100 % (02–03), inside the pin.
+  3. The brochure rises to the text (04).
+  4. The cover opens (a stiff curl) and the brochure grows from 0.86 to 1, centring the spread (05).
+  5. Intro → Design → Exterior → Profile → Salon → Owner cabin → Deck plans → Specification: 7 page turns with curl and short pauses on each spread (06–14).
+  6. The brochure **closes**: the whole left stack turns back as one rigid bundle, the brochure shrinks and centres (15).
+  7. It **stays closed**; the pin releases, the page scrolls on, and the CTA appears (16).
+  8. On mobile the same sequence runs with faster turns and shorter pauses ("pages scroll by", mobile 07–08).
+- **Content is data.** A `$book['spreads']` array holds `name` plus `left` and `right` pages. Page types:
+  - `logo`, `title`, `image`, `image-text`;
+  - `bleed` (half of a spread-wide photo, with an optional `panel` or `callouts`);
+  - `plan`, `spec`.
+
+  In ACF this becomes a repeater with a layout select. The placeholder photos are `assets/img/our-yachts/raw-*.jpg`.
+- **Performance:**
+  - Only the leaf **currently turning** is cut into strips (12 for a page, 8 for the cover). The strips are removed as soon as it is at rest, so the DOM holds only whole faces (8 leaves).
+  - Closing uses a rigid mode with no strips.
+  - A cast shadow falls on the page underneath; the left "board" shadow appears and disappears together with the cover.
+- **Reduced motion:** a static open Intro spread with the CTA.
+
+## Frame times (real Chrome, smooth 4-second scroll across the whole pinned range; avg fps / frames > 32 ms)
+The machine was heavily loaded by the parallel agents' Chrome instances (load average 16–20), so here are several runs each:
+
+| Effect | 1440×900 | 375×812 |
+|---|---|---|
+| Globe, whole timeline | 60/0 · 58.1/7 · 58.1/8 · 60/0 | 60/0 |
+| Book, 8 spreads + closing | 59.4/1 · 55.3/14 · 60/0 · 60/0 · 60/0 (closing range) | 60/0 |
+| Map, switch between 4 offices (no screencast) | 60.1/0 · 60.2/0 · 49.2/8 · 58.2/2 | — |
+
+The best runs give a clean 60 fps with no long frames. The spikes coincide with peaks in other processes' load. Turning off transitions, shadows or the mask in the diagnostic run did not change the picture (Round 3).
+
+## Sheets and screenshots (`shots/`)
+
+**Globe**
+- `globe-1440-r5-motion-sheet.jpg`: real frames: fill → rise → gentle turn → stats
+- `globe-1440-0_5.png`: Malta and Istanbul without overlap
+- `globe-375-0_5.png`
+
+**Book**
+- `book-1440-r5-seq-sheet.jpg`: 16 states
+- `book-1440-r5-motion-sheet.jpg`: real frames with curl
+- `book-1440-r5-close-motion-sheet.jpg`: closing
+- `book-375-r5-seq-sheet.jpg`: mobile
+
+**Map**
+- `map-1440-r5-flight-motion-sheet.jpg`: switch to the 4th office (stretching step, flight, raised card)
+- `map-1440-flight-end.png`, `map-1024-flight-end.png` (scroll-snap), `map-375-flight-end.png`
+
+**Reduced motion**
+- `globe-reduced.png`, `book-reduced.png`, `map-reduced.png`
+
+## Estimates (updated)
+- Globe: **8–12 h** (navy look, inertia, tuning the 6 frames with the designer).
+- Book with 8 spreads, curl and closing: **14–24 h** (ACF repeater of page layouts, real assets, Safari/iOS tuning).
+- Map with 4 offices: **6–10 h**.

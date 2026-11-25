@@ -12,15 +12,7 @@
 
 .cta-eyebrow{margin:0 0 18px;font:400 12px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5)}
 .cta-title{margin:0;font:300 clamp(30px,4.2vw,64px)/1.15 var(--font);letter-spacing:-.015em}
-.cta-em{
-  font-family:var(--serif); font-style:italic; font-weight:400; letter-spacing:0;
-  /* Text fill: two-stop gradient, position driven by --fill (0..1) from JS/ScrollTrigger */
-  --fill:0;
-  background:linear-gradient(90deg,#fff 0 50%,var(--cta-dim) 50% 100%);
-  background-size:200% 100%; background-position:calc(100% - var(--fill) * 100%) 0;
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-  padding:0 .06em .08em 0; /* keep the italic overhang inside the clip */
-}
+.cta-em{font-family:var(--serif); font-style:italic; font-weight:400; letter-spacing:0}
 .cta-text{margin:22px auto 0;max-width:460px;font-size:16px;line-height:1.55;color:rgba(255,255,255,.66)}
 
 .cta-btn{
@@ -33,5 +25,4 @@
 .cta-btn:hover svg,.cta-btn:focus-visible svg{transform:translateX(5px)}
 .cta-btn:focus-visible{outline:2px solid #fff;outline-offset:4px}
 
-@media (prefers-reduced-motion:reduce){ .cta-em{--fill:1} }
 @media (max-width:767px){ .cta-inner{padding:88px 0 72px} .cta-title{font-size:30px} }

@@ -1,0 +1,4 @@
+/* Shared text-fill (see assets/js/text-fill.js): letters gain opacity one by one on scroll.
+   .tf is added by HS.textFill(); .tf__w = word wrapper (no breaks inside words), .tf__c = letter. */
+.tf .tf__w { white-space: nowrap; }
+.tf .tf__c { will-change: opacity; }

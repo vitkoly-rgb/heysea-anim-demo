@@ -1,43 +1,49 @@
-/* ===== 04 · Globe ===== */
-.globe { background: #fff; overflow: hidden; }
+/* ===== 04 · Globe (navy, за підписаним Figma «Global Network · Rotation 01–06») ===== */
+.globe { --g-bg: #0c2b50; --g-ink: #fff; --g-muted: #8ea3bd; background: var(--g-bg); color: var(--g-ink); overflow: hidden; }
 .globe__stage { position: relative; height: 100vh; height: 100svh; overflow: hidden; }
+.globe .demo-label { background: rgba(255, 255, 255, .12); color: rgba(255, 255, 255, .7); }
 
-.globe__head { position: absolute; left: 0; right: 0; top: 22vh; text-align: center; z-index: 1; will-change: filter, opacity; }
-.globe__eyebrow { margin: 0 0 18px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.globe__title { margin: 0 auto; max-width: 16em; font-weight: 400; font-size: clamp(28px, 4.2vw, 56px); line-height: 1.12; letter-spacing: -.02em; color: var(--ink); }
-.globe__lead { margin: 18px auto 0; max-width: 34em; font-size: 14px; color: #6b7177; }
+.globe__head { position: absolute; left: 0; right: 0; top: 19vh; text-align: center; z-index: 1; will-change: filter, opacity; }
+.globe__eyebrow { margin: 0 0 18px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--g-muted); }
+.globe__title { margin: 0 auto; max-width: 16em; font-weight: 400; font-size: clamp(30px, 4vw, 56px); line-height: 1.1; letter-spacing: -.02em; color: var(--g-ink); }
+.globe__title em { font-family: var(--serif); font-style: italic; color: var(--g-muted); letter-spacing: -.01em; }
+.globe__lead { margin: 20px auto 0; max-width: 34em; font-size: 14px; color: var(--g-muted); }
+.globe__cta { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; padding: 10px 18px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px; color: #fff; text-decoration: none; font-size: 13px; transition: background-color .2s; }
+.globe__cta:hover { background: rgba(255, 255, 255, .1); }
+.globe__cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-/* Планета: розмір задає JS (--size), позицію/масштаб — GSAP (transform). */
+/* Планета: розмір задає JS (--size), позицію — GSAP (transform). */
 .globe__planet { position: absolute; left: 50%; top: 0; width: var(--size, 800px); height: var(--size, 800px); margin-left: calc(var(--size, 800px) / -2); z-index: 2; will-change: transform; transform-origin: 50% 50%; }
 .globe__canvas { width: 100%; height: 100%; }
 .globe__markers { position: absolute; inset: 0; pointer-events: none; }
 
 .globe-marker { position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; transition: opacity .35s ease; will-change: transform, opacity; }
 .globe-marker.is-visible { opacity: var(--markers, 0); }
-.globe-marker__dot { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: #111; }
-.globe-marker__dot::after { content: ""; position: absolute; inset: -1px; border-radius: 50%; border: 1px solid rgba(17,17,17,.6); animation: globe-pulse 2.4s ease-out infinite; }
-/* Тег над точкою, як у макеті: світлий (білий, темний текст) або темний (акцент) */
-.globe-marker__label { position: absolute; left: 0; bottom: 9px; white-space: nowrap; transform: translate(calc(-50% + var(--dx, 0px)), 0); font: 500 12px/1 var(--font); letter-spacing: .01em; padding: 7px 10px; border-radius: 2px; color: #111; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 4px 14px rgba(0,0,0,.08); }
-.globe-marker--dark .globe-marker__label { color: #fff; background: #151a20; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
-@keyframes globe-pulse { from { transform: scale(1); opacity: .8; } to { transform: scale(3); opacity: 0; } }
+.globe-marker__dot { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+/* Пульсація — CSS-анімація, не залежить від скролу */
+.globe-marker__dot::after { content: ""; position: absolute; inset: -1px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .8); animation: globe-pulse 2.4s ease-out infinite; }
+.globe-marker__label { position: absolute; left: 0; bottom: 9px; white-space: nowrap; transform: translate(calc(-50% + var(--dx, 0px)), 0); font: 500 12px/1 var(--font); letter-spacing: .01em; padding: 7px 10px; border-radius: 2px; color: #0c2b50; background: rgba(255, 255, 255, .92); box-shadow: 0 4px 14px rgba(0, 10, 30, .25); }
+.globe-marker--left .globe-marker__label { bottom: auto; top: -12px; transform: translateX(calc(-100% - 9px + var(--dx, 0px))); }
+.globe-marker--right .globe-marker__label { bottom: auto; top: -12px; transform: translateX(calc(9px + var(--dx, 0px))); }
+.globe-marker--dark .globe-marker__label { color: #fff; background: #061a33; box-shadow: 0 0 0 1px rgba(255, 255, 255, .2), 0 4px 14px rgba(0, 10, 30, .35); }
+@keyframes globe-pulse { from { transform: scale(1); opacity: .8; } to { transform: scale(3.2); opacity: 0; } }
 
-/* Низ глобуса розчиняється в білому у фінальному кадрі (дешевше за mask — лише opacity) */
-.globe__fade { position: absolute; left: 0; right: 0; bottom: 0; height: 58vh; z-index: 2; pointer-events: none; opacity: 0; background: linear-gradient(180deg, rgba(255,255,255,0), #fff 62%); }
+/* Низ планети розчиняється у navy у фінальному кадрі (дешевше за mask — лише opacity) */
+.globe__fade { position: absolute; left: 0; right: 0; bottom: 0; height: 58vh; z-index: 2; pointer-events: none; opacity: 0; background: linear-gradient(180deg, rgba(12, 43, 80, 0), var(--g-bg) 62%); }
 
-.globe__stats { position: absolute; left: 0; right: 0; top: auto; bottom: 9vh; z-index: 3; display: flex; justify-content: center; gap: clamp(32px, 9vw, 140px); margin-top: 0; text-align: center; opacity: 0; visibility: hidden; }
+.globe__stats { position: absolute; left: 0; right: 0; bottom: 9vh; z-index: 3; display: flex; justify-content: center; gap: clamp(32px, 9vw, 140px); margin: 0; text-align: center; opacity: 0; visibility: hidden; }
 .globe-stat { min-width: 120px; }
-.globe-stat__value { font-size: clamp(36px, 4.4vw, 60px); font-weight: 300; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
-.globe-stat__label { margin: 10px 0 0; font-size: 12px; color: #6b7177; }
+.globe-stat__value { font-family: var(--serif); font-size: clamp(36px, 4vw, 56px); font-weight: 400; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.globe-stat__label { margin: 10px 0 0; font-size: 12px; color: var(--g-muted); }
 
 .visually-hidden-globe { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 640px) {
-  .globe__head { top: 18vh; }
-  .globe__stats { gap: 18px; }
+  .globe__head { top: 15vh; }
+  .globe__stats { gap: 18px; bottom: 12vh; }
   .globe-stat { min-width: 0; flex: 1; }
   .globe-stat__label { font-size: 11px; }
   .globe-marker__label { font-size: 10px; padding: 5px 7px; }
-  .globe__stats { bottom: 12vh; }
 }
 
 /* Reduced motion: без pin — статичний кадр (глобус з офісами, стати під ним). */

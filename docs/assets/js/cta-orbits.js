@@ -4,7 +4,7 @@
      "[lat lon]" label derived from its orbital position (a pseudo satellite ground track).
    - Runs only while on screen (IntersectionObserver) — rAF also stops in hidden tabs.
    - Reduced motion: one static frame.
-   - Heading last word: scroll-scrubbed text fill grey → white.
+   - Title: shared letter-by-letter text-fill (muted → 100%) while the section is pinned.
    ========================================================================== */
 (() => {
   'use strict';
@@ -12,16 +12,20 @@
   if (!sec) return;
   const reduced = !!(window.HS && HS.reduced);
 
-  // ---- Text fill on scroll -------------------------------------------------
-  const em = sec.querySelector('.cta-em');
-  if (em && window.gsap && window.ScrollTrigger && !reduced) {
-    // Starts once the block is substantially in view (its top at 55% of the viewport),
-    // completes when the title reaches the viewport center.
-    gsap.fromTo(em, { '--fill': 0 }, {
-      '--fill': 1,
-      ease: 'none',
-      scrollTrigger: { trigger: sec, start: 'top 55%', endTrigger: em, end: 'center center', scrub: 0.5 },
-    });
+  // ---- Title text-fill (site-wide rule, shared HS.textFill) ---------------------
+  // The whole title starts uniformly muted (white at low opacity on navy); letters reach 100% one by one,
+  // first → last, while the CTA is PINNED. The page only continues scrolling after the fill is complete.
+  const title = sec.querySelector('.cta-title');
+  if (title && window.gsap && window.ScrollTrigger && HS.textFill) {
+    if (reduced) {
+      HS.textFill(title); // reduced: helper just sets every letter to 100%
+    } else {
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: sec, pin: true, start: 'top top', end: () => '+=' + Math.round(innerHeight * 0.8), scrub: 0.5, invalidateOnRefresh: true },
+      });
+      HS.textFill(title, { timeline: tl, at: 0, duration: 0.85, from: 0.28 });
+      tl.to({}, { duration: 0.15 }); // short hold at 100% before the pin releases
+    }
   }
 
   // ---- Canvas orbits ---------------------------------------------------------

@@ -29,6 +29,7 @@ $ws_icons = [
 ];
 $e = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 ?>
+<?php // text-fill helper (HS.textFill + .tf CSS) is loaded globally by index.php ?>
 <section id="wave-steps" class="demo-sec ws" aria-labelledby="ws-title">
   <span class="demo-label">07 · Wave steps</span>
   <div class="ws-pin">

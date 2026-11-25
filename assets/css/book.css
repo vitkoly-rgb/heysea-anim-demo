@@ -1,21 +1,24 @@
-/* ===== 05 · Book (pure CSS 3D) ===== */
+/* ===== 05 · Book (pure CSS 3D, Round 5 — за підписаним Figma «Brochure Request») ===== */
 .book {
-  /* Розміри сторінки — від них рахується все (і кегль тексту на сторінках) */
-  --ph: min(62vh, 540px);
-  --pw: calc(var(--ph) * .72);
-  --t: 14px;                       /* товщина блоку сторінок */
-  --paper: #fbfaf7;
-  --cy: 52%;                       /* вертикальний центр книги на сцені */
-  background: #fff;
+  /* Ландшафтні сторінки: розворот ≈ 2.8 : 1. Усе (і кегль на сторінках) рахується від --pw */
+  --pw: min(41vw, 600px, 78vh);
+  --ph: calc(var(--pw) / 1.4);
+  --t: 12px;                       /* товщина блоку сторінок (≥ кількість аркушів + 2 px) */
+  --paper: #fdfdfc;
+  --pale: #c9d6e2;                 /* блідо-блакитні панелі з макета */
+  --cy: 60%;                       /* вертикальний центр книги на сцені */
+  --b-ink: #0d1b2a; --b-muted: #8b939c;
+  background: #f7f9fb; color: var(--b-ink);
 }
 .book__stage { position: relative; height: 100vh; height: 100svh; overflow: hidden; }
 
-.book__head { position: absolute; left: 0; right: 0; top: 20vh; text-align: center; will-change: filter, opacity; }
-.book__eyebrow { margin: 0 0 16px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.book__title { margin: 0 auto; max-width: 15em; font-weight: 400; font-size: clamp(28px, 4vw, 54px); line-height: 1.12; letter-spacing: -.02em; }
+.book__head { position: absolute; left: 0; right: 0; top: 13vh; text-align: center; }
+.book__eyebrow { margin: 0 0 14px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--b-muted); }
+.book__title { margin: 0 auto; max-width: 24em; font-weight: 400; font-size: clamp(24px, 2.6vw, 38px); line-height: 1.15; letter-spacing: -.015em; }
+.book__title em { font-family: var(--serif); font-style: italic; color: var(--b-muted); }
 
 /* 3D-сцена. Увага: на предках .book__obj НЕ можна filter/opacity<1/overflow — вони «сплющують» preserve-3d */
-.book__scene { position: absolute; inset: 0; perspective: 2200px; perspective-origin: 50% 40%; pointer-events: none; }
+.book__scene { position: absolute; inset: 0; perspective: 2600px; perspective-origin: 50% 40%; pointer-events: none; }
 .book__obj {
   position: absolute; left: 50%; top: var(--cy);
   width: var(--pw); height: var(--ph);
@@ -26,81 +29,88 @@
 .book__obj > * { position: absolute; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
 
 /* Задня обкладинка + грані (товщина) */
-.book__back { inset: 0; background: #1b2633; border-radius: 0 3px 3px 0; transform: translateZ(calc(var(--t) * -1)); box-shadow: 0 40px 70px -20px rgba(10, 20, 30, .45); }
-.book__spine { left: 0; top: 0; width: var(--t); height: 100%; background: linear-gradient(90deg, #142030, #24384d 50%, #142030); transform-origin: 0 50%; transform: rotateY(90deg); display: grid; place-items: center; overflow: hidden; }
-.book__spine span { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 7px/1 var(--font); letter-spacing: .2em; text-transform: uppercase; color: rgba(255, 255, 255, .6); white-space: nowrap; }
+.book__back { inset: 0; background: #12263d; border-radius: 0 2px 2px 0; transform: translateZ(calc(var(--t) * -1)); box-shadow: 0 40px 70px -24px rgba(10, 25, 45, .4); }
+.book__lshadow { inset: 0; opacity: 0; background: #12263d; transform-origin: 0 50%; transform: translateZ(calc(var(--t) * -1)) rotateY(180deg); box-shadow: 0 40px 70px -24px rgba(10, 25, 45, .4); }
+.book__spine { left: 0; top: 0; width: var(--t); height: 100%; background: linear-gradient(90deg, #0f2236, #1d3651 50%, #0f2236); transform-origin: 0 50%; transform: rotateY(90deg); display: grid; place-items: center; overflow: hidden; }
+.book__spine span { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 6px/1 var(--font); letter-spacing: .2em; text-transform: uppercase; color: rgba(255, 255, 255, .55); white-space: nowrap; }
 .book__edge--side { left: 100%; top: 0; width: var(--t); height: 100%; transform-origin: 0 50%; transform: rotateY(90deg); background: repeating-linear-gradient(90deg, #f3f2ee 0 1px, #d9d7d0 1px 2px); }
 .book__edge--top { left: 0; top: 0; width: 100%; height: var(--t); transform-origin: 50% 0; transform: rotateX(-90deg); background: repeating-linear-gradient(0deg, #f3f2ee 0 1px, #d9d7d0 1px 2px); }
 
 /* Аркуші: обертаються навколо корінця (лівий край). transform задає JS: rotateY(a) translateZ(d) */
 .book__leaf { inset: 0; transform-origin: 0 50%; }
-.book__leaf--cover { transform: translateZ(2px); }
-.book__leaf--page  { transform: translateZ(1px); }
 .face { position: absolute; inset: 0; overflow: hidden; background: var(--paper); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .face--back { transform: rotateY(180deg); }
-/* ---- Curl: аркуш розрізаний JS-ом на N вертикальних смуг (вкладені, ланцюжок transform-origin) ----
-   .strip — 3D-контейнер (НЕ можна overflow/filter), кліпінг робить лише .face всередині (листовий елемент). */
+
+/* ---- Curl: аркуш, що ЗАРАЗ перегортається, JS тимчасово ріже на N смуг (вкладені, ланцюжок transform-origin).
+   .strip — 3D-контейнер (НЕ можна overflow/filter), кліпінг робить лише .face (листовий елемент). */
 .strip { position: absolute; top: 0; left: 0; height: 100%; width: calc(var(--pw) / var(--n)); transform-origin: 0 50%; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
 .strip .strip { left: 100%; }
-.book__leaf.is-flat > .strip, .book__leaf.is-seg:not(.is-flat) > .face { visibility: hidden; }
+.book__leaf.is-seg > .face { visibility: hidden; }  /* поки є смуги — цілі грані сховані (повертаються в спокої) */
 .strip > .face { inset: 0 -1px; }                  /* ±1px перекриття — без «волосяних» щілин на згинах */
 .strip .slice { position: absolute; top: 0; height: 100%; width: var(--pw); }
-/* Освітлення кожної смуги з JS: --s — затемнення (від кута до глядача), --h — блік на згині */
 .strip > .face::after, .strip > .face::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .strip > .face::after { background: #0b1420; opacity: var(--s, 0); }
 .strip > .face::before { background: #fff; opacity: var(--h, 0); }
-/* Тінь, яку аркуш кидає на сторінку під ним (права / ліва), масштабується з проєкцією аркуша */
+/* Тінь, яку аркуш кидає на сторінку під ним (права / ліва) */
 .book__cast { inset: 0; pointer-events: none; opacity: 0; transform-origin: 0 50%; }
-.book__cast--r { background: linear-gradient(90deg, rgba(10, 18, 28, .45), rgba(10, 18, 28, .12) 55%, rgba(10, 18, 28, 0)); transform: translateZ(.5px); }
-.book__cast--l { background: linear-gradient(90deg, rgba(10, 18, 28, .45), rgba(10, 18, 28, .12) 55%, rgba(10, 18, 28, 0)); transform: translateZ(-1.5px) rotateY(180deg); }
-.book__lshadow { inset: 0; opacity: 0; background: #1b2633; transform-origin: 0 50%; transform: translateZ(calc(var(--t) * -1)) rotateY(180deg); box-shadow: 0 40px 70px -20px rgba(10, 20, 30, .4); }  /* «дошка» під лівою стороною відкритої книги */
+.book__cast--r { background: linear-gradient(90deg, rgba(10, 18, 28, .42), rgba(10, 18, 28, .1) 55%, rgba(10, 18, 28, 0)); transform: translateZ(.5px); }
+.book__cast--l { background: linear-gradient(90deg, rgba(10, 18, 28, .42), rgba(10, 18, 28, .1) 55%, rgba(10, 18, 28, 0)); transform: translateZ(-.5px) rotateY(180deg); }
 
-/* Обкладинка */
-.cover { background: #0e1a26; color: #fff; border-radius: 0 3px 3px 0; }
+/* ---- Обкладинка: фото на весь лист, «ASTERIA 142» serif справа вгорі ---- */
+.cover { background: #0b2a4a; color: #fff; border-radius: 0 2px 2px 0; }
 .cover__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.cover::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(8, 18, 30, .55), rgba(8, 18, 30, 0) 45%, rgba(8, 18, 30, .35)); }
-.cover__text { position: absolute; z-index: 2; inset: 9% 9% auto; }
-.cover__brand { margin: 0; font: 600 calc(var(--pw) * .032)/1 var(--font); letter-spacing: .3em; text-transform: uppercase; }
-.cover__title { margin: .35em 0 0; font: 400 calc(var(--pw) * .16)/1 var(--serif); letter-spacing: -.01em; }
-.cover__edition { margin: .6em 0 0; font-size: calc(var(--pw) * .032); opacity: .8; }
+.cover::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(200deg, rgba(6, 20, 40, .45), rgba(6, 20, 40, 0) 50%); }
+.cover__title { position: absolute; z-index: 2; right: 7%; top: 8%; margin: 0; font: 400 calc(var(--pw) * .07)/1 var(--serif); letter-spacing: .08em; text-transform: uppercase; }
+.cover__title span { font-size: 1.5em; letter-spacing: 0; }
 
-/* Сторінки розвороту (типографіка масштабується від --pw) */
-.pg { position: absolute; inset: 0; padding: 8% 8% 6%; font-size: calc(var(--pw) * .028); line-height: 1.45; color: #2b2f33; display: flex; flex-direction: column; }
-.pg--left { background: linear-gradient(270deg, rgba(0, 0, 0, .08), rgba(0, 0, 0, 0) 9%), var(--paper); }
-.pg--right { background: linear-gradient(90deg, rgba(0, 0, 0, .1), rgba(0, 0, 0, 0) 9%), var(--paper); }
-.pg__kicker { margin: 0; font-size: .85em; letter-spacing: .18em; text-transform: uppercase; color: #8a9096; }
-.pg__title { margin: .15em 0 .5em; font: 400 calc(var(--pw) * .14)/1 var(--serif); color: var(--navy); }
-.pg__hero { flex: 1; min-height: 0; width: 100%; object-fit: cover; }
-.pg__folio { margin: .9em 0 0; font-size: .8em; color: #9aa0a6; }
-.pg__lead { margin: 0 0 1em; font: 400 1.5em/1.3 var(--serif); color: #1c2125; }
-.pg__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6%; margin-bottom: 1em; }
-.pg__cols p { margin: 0; font-size: .9em; color: #5d646b; }
-.pg__thumbs { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; flex: 1; min-height: 0; }
-.pg__thumbs img { width: 100%; height: 100%; object-fit: cover; }
-.pg__thumbs img:first-child { grid-row: span 2; }
-.pg__specs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 1em 0 0; border-top: 1px solid #e3e1db; padding-top: .8em; }
-.pg__specs dt { font-size: .75em; letter-spacing: .1em; text-transform: uppercase; color: #9aa0a6; }
-.pg__specs dd { margin: .2em 0 0; font-weight: 600; color: var(--navy); }
+/* ---- Сторінки (типографіка масштабується від --pw) ---- */
+.pg { position: absolute; inset: 0; font-size: calc(var(--pw) * .024); line-height: 1.4; color: #2b3540; }
+.pg::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3; }   /* тінь біля корінця */
+.face--back .pg::after, .pg--l::after { background: linear-gradient(270deg, rgba(0, 0, 0, .14), rgba(0, 0, 0, 0) 7%); }
+.face--front .pg::after { background: linear-gradient(90deg, rgba(0, 0, 0, .14), rgba(0, 0, 0, 0) 7%); }
+.pg__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pg__img--wide { width: 200%; max-width: none; }
+.pg--bleed-r .pg__img--wide { left: -100%; }
+.pg__h { margin: 0 0 .5em; font: 400 1.9em/1.1 var(--serif); color: var(--b-ink); }
+.pg--logo { display: grid; place-items: center; background: #fff; }
+.pg__wave { width: 72%; fill: none; stroke: #9fb6cc; stroke-width: 2.4; stroke-linecap: round; }
+.pg--title { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; padding: 0 10%; background: #fff; text-align: right; }
+.pg__big { margin: 0; font: 400 3.2em/1 var(--serif); letter-spacing: .08em; text-transform: uppercase; color: var(--b-ink); }
+.pg__small { margin: .8em 0 0; color: var(--b-muted); font-size: .95em; }
+.pg--overlay .pg__over { position: absolute; z-index: 2; left: 8%; right: 30%; top: 12%; color: #fff; }
+.pg--overlay .pg__over .pg__h { color: #fff; font-size: 2.4em; text-transform: uppercase; letter-spacing: .03em; }
+.pg__panel { position: absolute; z-index: 2; top: 0; bottom: 0; width: 32%; padding: 9% 5%; background: var(--pale); color: #2b3540; font-size: .9em; }
+.pg__panel--right { right: 0; } .pg__panel--left { left: 0; }
+.pg__callout { position: absolute; z-index: 2; transform: translate(-50%, -100%); padding: .3em .6em; background: #fff; color: var(--b-ink); font-size: .8em; white-space: nowrap; box-shadow: 0 2px 8px rgba(0, 0, 0, .15); }
+.pg--plan { padding: 9% 8%; background: #fff; }
+.pg--plan svg { width: 100%; margin-top: 14%; fill: none; stroke: #6f8aa5; stroke-width: 1; }
+.pg--plan .hull { stroke: #0d1b2a; stroke-width: 1.4; fill: #f3f6f9; }
+.pg--spec { padding: 9% 9%; background: #fff; }
+.pg--spec dl { margin: 1em 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: .9em 1.6em; }
+.pg--spec dt { font-size: .75em; letter-spacing: .1em; text-transform: uppercase; color: var(--b-muted); }
+.pg--spec dd { margin: .15em 0 0; font-weight: 500; color: var(--b-ink); border-bottom: 1px solid #e6e9ed; padding-bottom: .4em; }
 
-/* CTA */
+/* CTA під книгою (у фінальному «closed» стані) */
 .book__cta {
   position: absolute; left: 50%; top: calc(var(--cy) + var(--ph) / 2 + 28px); transform: translateX(-50%);
-  display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px;
-  background: var(--navy); color: #fff; text-decoration: none; font-size: 14px; font-weight: 500; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 999px;
+  background: var(--b-ink); color: #fff; text-decoration: none; font-size: 14px; font-weight: 500; white-space: nowrap;
   opacity: 0; visibility: hidden;
 }
 .book__cta small { font-size: 11px; opacity: .6; }
-.book__cta:hover { background: #12406f; }
-.book__cta:focus-visible { outline: 2px solid var(--navy); outline-offset: 3px; }
+.book__cta:hover { background: #1c3350; }
+.book__cta:focus-visible { outline: 2px solid var(--b-ink); outline-offset: 3px; }
 
 @media (max-width: 640px) {
-  .book { --pw: 46vw; --ph: calc(var(--pw) / .72); --t: 8px; --cy: 42%; }
-  .book__head { top: 20vh; }
-  .book__cta { padding: 12px 18px; font-size: 13px; }
+  .book { --pw: 45vw; --t: 8px; --cy: 52%; }
+  .book__head { top: 14vh; }
+  .book__title { font-size: 22px; }
+  .book__cta { padding: 11px 18px; font-size: 13px; }
 }
 
-/* Reduced motion: статичний відкритий розворот без pin */
+/* Reduced motion: статичний відкритий перший розворот без pin */
 .book.is-static .book__stage { height: auto; min-height: 0; padding: 120px 0 100px; }
 .book.is-static .book__head { position: static; }
-.book.is-static .book__scene { position: relative; height: calc(var(--ph) + 60px); }
+.book.is-static { --cy: 50%; }
+.book.is-static .book__scene { position: relative; height: calc(var(--ph) + 80px); }
 .book.is-static .book__cta { position: relative; top: auto; display: flex; width: max-content; opacity: 1; visibility: visible; }

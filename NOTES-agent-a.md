@@ -226,3 +226,62 @@ Files: `partials/00-our-yachts.php` (slug `our-yachts`, first on the page), `ass
 - iOS: pin + `svh`; same notes as section 01.
 
 **Estimate: 5–8 h** (data model for ACF galleries plus tuning the depth/stream composition with the designer, which is the main time sink, plus image pipeline and iOS QA).
+
+---
+
+## Round 5 (designer review feedback): 21:47 → 22:02, about 15 min, 3–4 iterations per item
+The server was already running (another agent started it). I did not run build-static.sh or git.
+
+### Shared text-fill helper (site-wide rule), written first
+- `assets/js/text-fill.js` exposes **`HS.textFill(el, opts)`**:
+  - SplitText `words,chars`; every letter starts at the same opacity (`from`, default 0.25) and goes to 1 one by one with the scroll;
+  - no gradient wipe inside letters; nested italic spans are preserved.
+- Options:
+  - `{ scrollTrigger: {...} }` overrides its own scrubbed trigger (default `top 85%` → `top 40%`);
+  - `{ timeline, at, duration }` embeds it in an existing pinned timeline.
+- Each letter fades over about 3 letters' worth of scroll, and the stagger is computed so the whole fill takes exactly `duration`.
+- Under reduced motion it sets every letter to 1. It returns `{ split, chars, tween }`, guards against being included twice, and only needs gsap/SplitText at call time.
+- `assets/css/text-fill.css`: `.tf` (added by the helper), `.tf__w` (no breaks inside words), `.tf__c` (letters).
+- Loading: `index.php` only auto-loads per-slug files, so `partials/00-our-yachts.php` adds the `<link>` + `<script>` (with a filemtime cache-buster). **Other sections can reuse it as long as our-yachts is on the page**, or include the same two tags; the double-include guard makes that safe.
+
+### our-yachts
+- The whole heading (including "Distinctive by design. Crafted") now starts uniformly muted and fills letter by letter through `HS.textFill(title, { timeline, at: .04, duration: .84 })`. The fill ends at 88% of the pin, so the pin holds until the heading is 100% filled, then releases. Photos keep flying throughout.
+- The old grey/navy colour logic is removed; the difference blend uses only the navy colour, and the letters' opacity does the muting.
+- Note: this intentionally differs from the static Figma frame, where the first part is already dark. The designer's new rule wins.
+- Fix: removed `loading="lazy"` from the stream photos and pre-decode all photos with `img.decode()` at init. The lazy photos decoded mid-scroll and caused a one-off 233 ms hitch.
+
+### series-cursor
+- **Fixed text block:** a new `.sc__hud` (pinned mode only) holds the title, description, counter and navigation in fixed positions. Only their content flips inside clipping masks (grid-stacked items, `overflow:hidden`): the old item slides up and out while the new one slides up and in, scrubbed within each panel transition at 34–78% of it. The container never moves. Video panels still slide over each other.
+- The per-panel copy stays in the markup for no-JS / reduced motion / SEO and screen readers. In pinned mode it is visually hidden; the HUD itself is `aria-hidden`.
+- **No buttons on the panels:** the per-panel "Onboard →" links and their `link` data are removed.
+- **Navigation on the right:** a flipping counter "01 / 03" plus 3 tick buttons with the series names as labels. They are the keyboard focus targets and scroll to the matching panel (Lenis-aware). The real cursor shows over them.
+- **Titles on one line:** `white-space: nowrap`, size `clamp(30px, 7.6vw, 124px)`; "Bespoke Superyachts" fits at both 1440 and 375.
+- **ONBOARD cursor:**
+  - the outer frame ring carries the stroke (r = 31);
+  - the water circle is nested inside with a 5 px gap (r = 26), its empty part a translucent white fill (`rgba(255,255,255,.18)`);
+  - the drop-shadow from round 2 is removed;
+  - the static touch badge SVG matches (ring + translucent inner circle + water). The badge sits top-right on touch devices; on mobile the nav is a bottom row.
+
+### qr
+- **Appear effect:** columns fade from opacity 0 with a 60 px drift as they enter from the right edge. They are fully visible once their left edge reaches 72% of the viewport, or at their final resting position for the last columns, so Xiaohongshu ends at 100%. Columns already in view at the start stay at 100%, so the Figma first frame is kept.
+- `containerAnimation` triggers were mis-measured in this pinned + matchMedia setup (their start/end collapsed to about 0–1 px), so the appear is computed from the track's live `x` in the move tween's `onUpdate`. It is deterministic and cheap.
+
+### Motion QA (`node test/agent-a-motion.mjs sc|oy|qr|cursor`; headed Chrome for scroll, Lenis on)
+| Effect | avg FPS | frames >32 ms | max |
+|---|---|---|---|
+| series slider + HUD flip, 1440×900, videos playing (3 runs) | 58.1 / 59.6 / 60 | 13* / 3 / 0 | 67.6* / 34.3 / 17.8 ms |
+| our-yachts fly-through + letter fill, 1440×800 (3 runs after the decode fix) | 59.7 / 60 / 60 | 1** / 0 / 0 | 51** / 18 / 17.8 ms |
+| qr horizontal + appear, 1440×900 | 60 | 0 | 17.8 ms |
+| water cursor, continuous motion 3 s (headless Chrome***) | 59.3 | 8 | 33.4 ms |
+
+- \* First run only: video decode warm-up on first play. Not reproduced in the next 2 runs.
+- \*\* First run after a file change, same scroll position: image decode before the cache was warm.
+- \*\*\* Headless, because in a headed window the real OS mouse moved the custom cursor and broke the screenshots. Headless rAF often reports 33 ms frames. The cursor's only change is one extra translucent fill per frame; it measured 60.1 fps / 0 long frames headed in round 2.
+
+Contact sheets:
+- `shots/motion-series-hud-sheet.jpg` (16 frames across all transitions, cropped to the lower third): the title and text stay in place, only the content flips through the masks, and the counter flips on the right;
+- `shots/motion-our-yachts-sheet.jpg`: uniform muted heading → letter-by-letter fill → pin releases after 100%;
+- `shots/motion-qr-sheet.jpg`: upcoming columns are invisible and fade/drift in at the right edge;
+- `shots/motion-cursor-sheet.jpg`: ring + gap + translucent inner circle, slosh and settle.
+
+Estimates are unchanged. The text-fill helper saves time in other sections, about 0.5 h each.

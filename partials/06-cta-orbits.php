@@ -3,7 +3,7 @@
  * CTA with orbiting coordinates.
  * Background canvas (assets/js/cta-orbits.js): faint ellipses, a dot travels each one with a fading trail
  * and a live "[lat lon]" label derived from its position. Continuous, NOT scroll-bound.
- * The last heading word gets a scroll-scrubbed text fill (grey → white).
+ * Title: shared letter-by-letter text-fill (muted → 100%) while the section is pinned.
  */
 $cta = [
     'eyebrow'    => 'Get in touch',
@@ -21,6 +21,7 @@ $cta = [
 ];
 $e = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 ?>
+<?php // text-fill helper (HS.textFill + .tf CSS) is loaded globally by index.php ?>
 <section id="cta-orbits" class="demo-sec cta" aria-labelledby="cta-title">
   <span class="demo-label">06 · CTA orbits</span>
   <canvas class="cta-canvas" aria-hidden="true" data-orbits="<?= $e(json_encode($cta['orbits'])) ?>"></canvas>

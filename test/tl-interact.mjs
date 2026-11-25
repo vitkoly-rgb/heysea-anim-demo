@@ -23,7 +23,7 @@ await page.waitForTimeout(1200); await shot('next-end');
 console.log('flyers left after flight:', await page.evaluate(() => document.querySelectorAll('.tl-fly').length)); console.log('after next', await state());
 await page.click('.tl-prev'); await page.waitForTimeout(500); await shot('prev-mid'); await page.waitForTimeout(1500);
 await page.click('.tl-prev'); await page.waitForTimeout(250); await page.click('.tl-prev'); await page.waitForTimeout(1800);
-console.log('flyers after rapid clicks:', await page.evaluate(() => document.querySelectorAll('.tl-fly').length)); console.log('after 2x prev', await state());
+await page.waitForTimeout(800); console.log('flyers after rapid clicks (+0.8s settle):', await page.evaluate(() => document.querySelectorAll('.tl-fly').length)); console.log('after 2x prev', await state());
 // click a visible small year
 const btn = await page.evaluateHandle(() => [...document.querySelectorAll('.tl-year')].find((b) => b.style.visibility !== 'hidden' && +b.style.opacity > 0.3));
 await btn.click(); await page.waitForTimeout(1800); console.log('after year click', await state());

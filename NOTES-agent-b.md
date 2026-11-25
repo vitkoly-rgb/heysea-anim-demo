@@ -204,3 +204,68 @@ Single runs sometimes showed 1–4 spikes of 67–133 ms (one timeline-scroll ru
 - `shots/timeline-1440-motion-prev.jpg` (FLIP)
 
 **Estimates after Round 3:** timeline 14–24 h (pin + scroll sync + Lenis edge cases add tuning), wave 5–9 h, CTA 4–7 h. Total 23–40 h.
+
+---
+
+## Round 5 (designer feedback)
+Wall clock: 21:47 → 22:08, about 21 min. The machine was heavily loaded by parallel agents (load average 17–26 at times), which also made some single frame-time runs noisy; see the table below.
+
+**Text-fill (site-wide rule).** Every fill now uses the shared helper `HS.textFill` (`assets/js/text-fill.js` from agent A, loaded globally by index.php), embedded in my own pinned timelines via `{timeline, at, duration}`. I don't keep a local implementation. For a short while my two partials loaded the helper themselves; I removed those includes once the global one landed. The behaviour: the whole heading starts uniformly muted (every letter at the same low opacity), and letters reach 100% one by one from first to last, while the section is pinned. With reduced motion every letter is shown at full opacity.
+
+**1. CTA orbits**
+- The old gradient-wipe fill is removed (CSS and JS).
+- The whole title "Ready to create something *exceptional?*" now fills letter by letter (white at 0.28 → 1 on navy) while the section is pinned: `pin`, `+=80vh`, fill for 85% of it, then a 15% hold at full before the page moves on.
+- Orbits are unchanged.
+
+**2. Timeline**
+- **(a) Dark theme:** navy background, white text, light ring band, ticks and labels, white pointer, and outline buttons.
+- **(b) Photo per year.** Uses `our-yachts/raw-1..16` plus `photo-1..2`, set in PHP like a future ACF field.
+  - On year change the photos crossfade (old fades out, new fades in with a slight scale from 1.06).
+  - Only the current photo gets `src` up front; neighbours load on demand through `data-src`, so the page does not pull 3 MB at once.
+  - Placement: under the big year on desktop, top-right on mobile, kept clear of the ring labels the years land on.
+- **(c) Reverse skip.** "‹ Skip back" sits at bottom-left, mirroring "Skip Timeline ›".
+  - It jumps (immediately, with or without Lenis) to just above the timeline: the `#timeline-before` marker minus 0.85 of the viewport height, so the previous section is in view.
+  - Tested: after Skip, clicking Back → y = 0 / pin start, year 2008.
+- **(d) Smoother, continuous year transition. Two causes found:**
+  1. **The visible "jump onto the ring"** came from a leftover CSS `margin:-14px 0 0 -22px` on `.tl-year`, on top of the JS `translate(-50%,-50%)`. The real label therefore sat 22 px / 14 px away from where the flyer landed, so it jumped at hand-off. The margin is removed.
+  2. **"Shrinks, stops"** came from flyers being linearly interpolated in x/y, and on interruption (scroll scrub, quick clicks) being *snapped* to their end state.
+  - Rewrote the flyers in **polar coordinates** around the dial center, so each flyer travels one continuous curved path.
+    - An incoming year spirals from its ring label into the big slot, tracking the rotating ring exactly with the same ease.
+    - An outgoing year rides along with the dial back to its label.
+  - Each flyer is independent and **re-targetable**: an interrupted flyer turns around mid-air from its current state (a power2.out deceleration) instead of snapping.
+  - Far jumps (e.g. a 2025 → 2008 wrap) enter from the dial edge, with the angle clamped to ±110°, instead of spinning a full turn.
+  - Checked on the sheets: no pause and no jump in either direction, including during a fast scroll scrub. The flyer-leak check (0 left after settling) is in `test/tl-interact.mjs`.
+
+**3. Wave steps**
+- **Heading fill:** the heading fills (shared helper) during the pin **before** the wave starts. The pinned timeline is now [fill: 1 unit][wave: N units], about 60vh of scroll per unit. The grey colour on "continues." is removed, so the whole heading ends at full ink as the rule requires.
+- **Progress line rendering:** the dashed track used to run underneath the whole solid line, so its dashes showed at the antialiased edges as stripes.
+  - The track is now rebuilt every frame as **only the not-yet-drawn remainder** (pre-joined path tails, so it is a string concat, not a 300-point join).
+  - Its dash phase is pinned with `dashoffset = L`, so the dots don't crawl.
+  - Track width and dash are in user units, with no `vector-effect`, for the same screen-px vs viewBox reason as in Round 3.
+- Activation is still exact. `test/ws-crossing.mjs` is updated for the fill phase:
+  - 1440 node 1: L 462 not active, L 485 vs 481 current.
+  - 1440 node 2: L 782 not active, L 805 vs 801 current.
+  - 375: 249 not active, 261.5 vs 259.6 current; 422 not active, 434.7 vs 432.7 current.
+
+**Frame times** (rAF in page, headless Chrome on this Mac at 60 Hz; the first 2 frames after measurement starts are excluded):
+
+| Scenario | Frames | Avg FPS | Frames > 32 ms | Worst |
+|---|---|---|---|---|
+| timeline 1440 (FLIP next / prev / year click) | 323 | 60 | 0 | 16.8 ms |
+| timeline 375 | 322 | 60 | 0 | 16.8 ms |
+| timeline-scroll 1440 (scroll, click, scroll back, autoplay, skip, back) | 1009 | 59.9 | 1 | 33.4 ms |
+| timeline-scroll 375 | 980 | 59.9 | 1 | 50 ms (at measurement start) |
+| wave-steps 1440 / 375 | 288 / 287 | 60 / 60 | 0 / 0 | 16.8 ms |
+| cta-orbits 1440 / 375 | 389 / 389 | 60 / 60 | 0 / 0 | 16.8 ms |
+
+When the load average was above 17, a few single timeline runs showed one 550–933 ms frame and others showed 67–117 ms frames. I isolated this with an A/B test (photos on vs `display:none`) at normal load: both variants show only one 33–83 ms frame on the *first* transition (first-use warm-up). So it is machine load, not the photos or the flyer code.
+
+**Contact sheets** (`shots/`):
+- `timeline-1440-motion-next.jpg`, `timeline-1440-motion-prev.jpg` (continuous curved FLIP + photo crossfade, dark theme)
+- `timeline-375-motion-prev.jpg`, `timeline-375-motion-next.jpg`
+- `timeline-scroll-1440-motion-scroll3.jpg` (re-targeted flyers during scroll scrub)
+- `wave-steps-1440-motion-scroll.jpg` (heading fill → wave), `wave-steps-375-motion-scroll.jpg`
+- `ws-cross-1440-r5.png` (2× zoom: solid line, dotted remainder only, exact activation)
+- `cta-orbits-1440-motion-scrollorbits.jpg` (pinned letter-by-letter fill), `cta-orbits-375-motion-scrollorbits.jpg`
+
+**Estimates after Round 5:** timeline 16–28 h (dark theme, photos, reverse skip, polar FLIP with re-targeting), wave 6–10 h, CTA 4–7 h. Total 26–45 h.

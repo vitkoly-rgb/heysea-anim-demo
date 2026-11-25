@@ -50,6 +50,8 @@
 .hsmap__pin { position: absolute; left: 0; top: 0; width: 0; height: 0; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; will-change: transform; }
 .hsmap__pin-dot { position: absolute; left: -3.5px; top: -9px; width: 7px; height: 9px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #111; }
 .hsmap__pin-label { position: absolute; left: 0; bottom: 16px; transform: translateX(-50%); white-space: nowrap; font: 400 14px/1 var(--font); color: var(--ink); background: #fff; padding: 9px 12px; border-radius: 2px; box-shadow: 0 2px 10px rgba(0, 0, 0, .1); transition: background-color .35s, color .35s, box-shadow .35s; }
+.hsmap__pin--left .hsmap__pin-label { bottom: auto; top: -22px; transform: translateX(calc(-100% - 10px)); }
+.hsmap__pin--right .hsmap__pin-label { bottom: auto; top: -22px; transform: translateX(10px); }
 .hsmap__pin:hover .hsmap__pin-label { box-shadow: 0 4px 16px rgba(0, 0, 0, .16); }
 .hsmap__pin.is-active { z-index: 2; }
 .hsmap__pin.is-active .hsmap__pin-label { background: var(--card-ink); color: #fff; }
@@ -57,7 +59,7 @@
 @keyframes hsmap-pulse { from { transform: scale(.6); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
 
 /* ---- Картки: вирівняні по низу; активна темна, вища (росте вгору) і з «Contact us» ---- */
-.hsmap__cards { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: end; margin-top: -170px; }
+.hsmap__cards { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: end; margin-top: -170px; }
 .hsmap__card { position: relative; padding: 24px 20px 26px; background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(13, 27, 42, .04); border-radius: 4px; cursor: pointer; transition: background-color .5s ease, color .5s ease, padding .6s cubic-bezier(.65, 0, .35, 1), box-shadow .5s; }
 .hsmap__card:not(.is-active):hover { box-shadow: 0 6px 20px -8px rgba(13, 27, 42, .18); }
 .hsmap__card-kicker { margin: 0 0 6px; font-size: 12px; letter-spacing: .02em; text-transform: uppercase; }
@@ -78,6 +80,12 @@
 .hsmap__card.is-active .hsmap__card-info { color: rgba(255, 255, 255, .78); }
 .hsmap__card.is-active .hsmap__card-cta { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition: grid-template-rows .6s cubic-bezier(.65, 0, .35, 1), opacity .4s .25s, visibility 0s; }
 
+/* 4 картки: у 4 колонки від 1100px; вужче — горизонтальний список зі snap (активна прокручується у видиму зону) */
+@media (max-width: 1099px) {
+  .hsmap__cards { display: flex; align-items: flex-end; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 30px 0 4px; margin-top: -190px; }
+  .hsmap__cards::-webkit-scrollbar { display: none; }
+  .hsmap__card { flex: 0 0 40%; scroll-snap-align: start; }
+}
 @media (max-width: 760px) {
   .hsmap { padding: 90px 0 56px; }
   .hsmap__top { flex-direction: column; align-items: stretch; gap: 22px; }
@@ -88,10 +96,8 @@
   .hsmap__step.is-active { flex-basis: 110px; }
   .hsmap__map { height: 44vh; min-height: 300px; margin-top: 8px; }
   .hsmap__pin-label { font-size: 12px; padding: 7px 9px; }
-  /* Картки — горизонтальний список зі snap */
-  .hsmap__cards { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 4px; }
-  .hsmap__cards::-webkit-scrollbar { display: none; }
-  .hsmap__card { flex: 0 0 82%; scroll-snap-align: start; }
+  .hsmap__cards { margin-top: 12px; }
+  .hsmap__card { flex-basis: 82%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hsmap__step, .hsmap__step i::after, .hsmap__card, .hsmap__card-cta { transition: none !important; }

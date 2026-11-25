@@ -1,15 +1,16 @@
 /**
- * 04 · Globe — живий глобус (d3-geo orthographic → <canvas>) + скрол-таймлайн GSAP.
+ * 04 · Globe — живий глобус (d3-geo orthographic → <canvas>) + скрол-таймлайн GSAP (Round 5).
  *
- * Сцена (pin, scrub):
- *   0.00–0.26  глобус виїжджає знизу, заголовок блюриться; видно Boca Raton (Америки)
- *   0.32–0.58  поворот: Malta (зліва вгорі) + Guangdong (справа внизу)
- *   0.66–0.90  поворот до Азії (Guangdong біля верху), глобус — великий — їде вгору, низ розчиняється в білому
- *   0.84–1.00  каунт-ап статистики 15+ / 30+ / 4 над нижньою частиною глобуса
- *   Маркери — HTML, позиціонуються проекцією; на зворотному боці сфери ховаються.
+ * Сцена (pin, scrub: 1):
+ *   0.00–0.16  text-fill заголовка (HS.textFill: літери по одній до 100 %), низ планети вже видно (Rotation 01)
+ *   0.16–0.40  планета піднімається ВИЩЕ — видно її центр (Rotation 02), заголовок блюриться
+ *   0.16–0.86  м'який поворот ≈ 110° (Атлантика → Азія; Rotation 02–05), маркери офісів
+ *   0.72–0.92  планета їде вгору, низ розчиняється в navy, статистика 15+ / 30+ / 4 (Rotation 05–06)
  *
- * Перф: canvas перемальовується лише коли змінився кут обертання (rAF-коалесинг),
- * DPR ≤ 2; рух — CSS transform (композитор), не перерисовка.
+ * Плавність: таймлайн рухає лише ЦІЛЬОВИЙ кут (target); окремий цикл на gsap.ticker щокадру
+ * наближає поточний кут до цілі (експоненційний lerp, незалежний від FPS) → інерція без ривків навіть
+ * при «сходинковому» колесі миші. Canvas перемальовується кожен кадр, поки кут рухається, і стоїть, коли ні.
+ * DPR ≤ 2; рух планети — CSS transform (композитор). Пульсація точок — CSS, від скролу не залежить.
  */
 (() => {
   const root = document.getElementById('globe');
@@ -24,6 +25,7 @@
 
   const stage   = root.querySelector('.globe__stage');
   const head    = root.querySelector('.globe__head');
+  const title   = root.querySelector('.globe__title');
   const planet  = root.querySelector('.globe__planet');
   const canvas  = root.querySelector('.globe__canvas');
   const ctx     = canvas.getContext('2d');
@@ -31,62 +33,64 @@
   const fade    = root.querySelector('.globe__fade');
   const markers = [...root.querySelectorAll('.globe-marker')].map((el) => ({
     el, label: el.querySelector('.globe-marker__label'), w: 0,
+    side: el.classList.contains('globe-marker--left') ? 'left' : el.classList.contains('globe-marker--right') ? 'right' : 'top',
     coord: [+el.dataset.lng, +el.dataset.lat], visible: false,
   }));
 
-  // Стан, яким керує таймлайн
-  const state = { lambda: 75, phi: -18, markers: 0 };
+  // Кадри з підписаного Figma (rotate = [-lng, -lat] центру диска)
+  const ROT_START = { lambda: 38, phi: -24 };   // Атлантика: Boca зліва, Malta/Istanbul справа
+  const ROT_END   = { lambda: -72, phi: -14 };  // Азія: Guangdong ближче до центру-верху
+
+  const target = { ...ROT_START, markers: 0 };  // пише таймлайн
+  const state  = { ...ROT_START, markers: 0 };  // малюємо (наздоганяє target)
   const proj  = d3.geoOrthographic().clipAngle(90).precision(0.6);
   const path  = d3.geoPath(proj, ctx);
   const grat  = d3.geoGraticule10();
   const SPHERE = { type: 'Sphere' };
 
-  let land = null, size = 0, dpr = 1, drawn = '', raf = 0;
+  let land = null, size = 0, dpr = 1, drawn = '';
 
   /* ---------- розміри ---------- */
   function measure() {
     const vw = innerWidth, vh = innerHeight;
-    size = Math.round(vw < 640 ? Math.min(vw * 1.05, vh * 0.75) : Math.min(vw * 0.78, vh * 1.12, 1100));
+    size = Math.round(vw < 640 ? Math.min(vw * 1.1, vh * 0.78) : Math.min(vw * 0.8, vh * 1.18, 1150));
     dpr = Math.min(devicePixelRatio || 1, 2);
     planet.style.setProperty('--size', size + 'px');
     canvas.width = canvas.height = Math.round(size * dpr);
     proj.scale(size / 2 - 1).translate([size / 2, size / 2]);
     markers.forEach((m) => { m.w = m.label.offsetWidth; });
     drawn = '';
-    requestDraw();
+    draw();
   }
 
   /* ---------- рендер ---------- */
-  function requestDraw() { if (!raf) raf = requestAnimationFrame(draw); }
-
   function draw() {
-    raf = 0;
     const key = state.lambda.toFixed(2) + '|' + state.phi.toFixed(2);
-    if (key !== drawn) { // перемальовуємо canvas тільки при зміні обертання
+    if (key !== drawn) { // перемальовуємо canvas тільки при зміні кута
       drawn = key;
       proj.rotate([state.lambda, state.phi]);
       const r = size / 2;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, size, size);
 
-      // Сфера: м'яке «студійне» світло зліва-зверху
-      const g = ctx.createRadialGradient(r * 0.62, r * 0.55, r * 0.05, r, r, r);
-      g.addColorStop(0, '#eeeff1'); g.addColorStop(0.7, '#e4e6e9'); g.addColorStop(1, '#d3d6da');
+      // Океан: темно-синя сфера, світліше зліва-зверху
+      const g = ctx.createRadialGradient(r * 0.6, r * 0.5, r * 0.05, r, r, r);
+      g.addColorStop(0, '#24497a'); g.addColorStop(0.65, '#1a3c68'); g.addColorStop(1, '#122f55');
       ctx.beginPath(); path(SPHERE); ctx.fillStyle = g; ctx.fill();
 
-      ctx.beginPath(); path(grat); ctx.strokeStyle = 'rgba(17,24,39,.045)'; ctx.lineWidth = 0.6; ctx.stroke();
+      ctx.beginPath(); path(grat); ctx.strokeStyle = 'rgba(255,255,255,.035)'; ctx.lineWidth = 0.6; ctx.stroke();
 
       if (land) {
         ctx.beginPath(); path(land);
-        ctx.fillStyle = '#fbfbfb'; ctx.fill();
-        ctx.strokeStyle = 'rgba(120,128,138,.18)'; ctx.lineWidth = 0.5; ctx.stroke();
+        ctx.fillStyle = '#345d8e'; ctx.fill();
+        ctx.strokeStyle = 'rgba(160,190,225,.18)'; ctx.lineWidth = 0.5; ctx.stroke();
       }
 
-      // Затінення до краю (об'єм) + тонкий обідок
-      const s = ctx.createRadialGradient(r * 0.7, r * 0.6, r * 0.4, r, r, r);
-      s.addColorStop(0, 'rgba(255,255,255,0)'); s.addColorStop(0.8, 'rgba(60,70,80,.06)'); s.addColorStop(1, 'rgba(60,70,80,.22)');
+      // Затінення до краю (об'єм) + тонкий світлий обідок
+      const s = ctx.createRadialGradient(r * 0.7, r * 0.6, r * 0.35, r, r, r);
+      s.addColorStop(0, 'rgba(5,15,35,0)'); s.addColorStop(0.8, 'rgba(5,15,35,.12)'); s.addColorStop(1, 'rgba(5,15,35,.42)');
       ctx.beginPath(); path(SPHERE); ctx.fillStyle = s; ctx.fill();
-      ctx.strokeStyle = 'rgba(17,24,39,.06)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.strokeStyle = 'rgba(170,200,235,.12)'; ctx.lineWidth = 1; ctx.stroke();
     }
     placeMarkers();
   }
@@ -95,18 +99,32 @@
     planet.style.setProperty('--markers', state.markers.toFixed(3));
     const center = [-state.lambda, -state.phi];
     for (const m of markers) {
-      // зворотний бік сфери → ховаємо (невеликий запас, щоб підпис не «лип» до краю)
+      // зворотний бік сфери → ховаємо (запас, щоб підпис не «лип» до краю)
       const vis = d3.geoDistance(m.coord, center) < Math.PI / 2 - 0.15;
       if (vis !== m.visible) { m.visible = vis; m.el.classList.toggle('is-visible', vis); }
       if (vis) {
         const [x, y] = proj(m.coord);
         m.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
-        // не даємо підпису вилізти за край екрана (актуально на мобільному)
-        const left = (innerWidth - size) / 2 + x - m.w / 2;
+        const off = m.side === 'left' ? -m.w - 9 : m.side === 'right' ? 9 : -m.w / 2;
+        const left = (innerWidth - size) / 2 + x + off;               // не даємо підпису вилізти за край
         const dx = Math.min(Math.max(left, 8), innerWidth - 8 - m.w) - left;
         m.label.style.setProperty('--dx', dx.toFixed(1) + 'px');
       }
     }
+  }
+
+  /* ---------- інерція: state → target кожен кадр ---------- */
+  let active = false;
+  function tick(time, deltaMs) {
+    if (!active) return;
+    const k = 1 - Math.pow(1 - 0.09, Math.min(deltaMs, 64) / 16.67);   // ≈ 9 % за кадр при 60 fps
+    let moving = false;
+    for (const p of ['lambda', 'phi', 'markers']) {
+      const d = target[p] - state[p];
+      if (Math.abs(d) > (p === 'markers' ? 0.002 : 0.01)) { state[p] += d * k; moving = true; }
+      else state[p] = target[p];
+    }
+    if (moving || drawn === '') draw();
   }
 
   /* ---------- таймлайн ---------- */
@@ -115,38 +133,35 @@
   function buildTimeline() {
     const vh = () => innerHeight;
     const mob = () => innerWidth < 640;
-    const yStart = () => vh() + 20;                                   // повністю під екраном
-    const yRise  = () => vh() * (mob() ? 0.56 : 0.74) - size / 2;     // перекриває заголовок
-    const yEnd   = () => vh() * (mob() ? 0.34 : 0.3) - size / 2;      // глобус лишається великим, їде вгору
+    const yStart = () => vh() - size * 0.2;                           // видно «шапку» планети (Rotation 01)
+    const yRise  = () => vh() * (mob() ? 0.6 : 0.58) - size / 2;      // центр планети на ~58 % висоти (Rotation 02)
+    const yEnd   = () => vh() * (mob() ? 0.3 : 0.24) - size / 2;      // планета їде вгору (Rotation 05)
 
     gsap.set(planet, { y: yStart });
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
-      onUpdate: requestDraw,
       scrollTrigger: {
-        trigger: root, start: 'top top', end: '+=340%',
-        pin: stage, scrub: 0.6, invalidateOnRefresh: true,
+        trigger: root, start: 'top top', end: '+=420%',
+        pin: stage, scrub: 1, invalidateOnRefresh: true,
       },
     });
 
-    // Кадри з макета (rotate = [-lng, -lat] центру диска):
-    //  A  Америки — видно Federal Highway, Boca Raton
-    //  B  Європа/Азія — Malta зліва вгорі, Guangdong справа внизу
-    //  C  Азія — Guangdong біля верху, внизу каунт-ап статистики
-    tl.to(planet, { y: yRise, ease: 'power2.out', duration: 0.26 }, 0)
-      .to(head, { filter: 'blur(10px)', opacity: 0.35, duration: 0.22 }, 0.04)
-      .fromTo(state, { lambda: 104, phi: -16 }, { lambda: 84, phi: -22, duration: 0.32 }, 0)     // A
-      .to(state, { markers: 1, duration: 0.06 }, 0.12)
-      .to(state, { lambda: -64, phi: -40, ease: 'sine.inOut', duration: 0.26 }, 0.32)           // → B
-      .to(head, { opacity: 0, duration: 0.08 }, 0.5)
-      .to(state, { lambda: -96, phi: -4, ease: 'sine.inOut', duration: 0.24 }, 0.66)            // → C
-      .to(planet, { y: yEnd, ease: 'power2.inOut', duration: 0.24 }, 0.66)
+    // 1) text-fill під час pin, до руху планети
+    if (HS.textFill) HS.textFill(title, { timeline: tl, at: 0, duration: 0.15 });
+    else tl.to({}, { duration: 0.15 }, 0);
+
+    tl.to(planet, { y: yRise, ease: 'power2.inOut', duration: 0.24 }, 0.16)
+      .to(head, { filter: 'blur(10px)', opacity: 0.3, duration: 0.2 }, 0.2)
+      .to(target, { lambda: ROT_END.lambda, phi: ROT_END.phi, ease: 'sine.inOut', duration: 0.7 }, 0.16)
+      .to(target, { markers: 1, duration: 0.06 }, 0.3)
+      .to(head, { opacity: 0, duration: 0.08 }, 0.56)
+      .to(planet, { y: yEnd, ease: 'power2.inOut', duration: 0.2 }, 0.72)
       .to(fade, { opacity: 1, duration: 0.16 }, 0.76)
       .fromTo(stats, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, ease: 'power2.out', duration: 0.1 }, 0.84);
 
     counters.forEach((c, i) => {
       tl.fromTo(c, { v: 0 }, {
-        v: c.to, duration: 0.13, ease: 'power1.out',
+        v: c.to, duration: 0.12, ease: 'power1.out',
         onUpdate: () => { c.el.textContent = Math.round(c.v); },
       }, 0.85 + i * 0.015);
     });
@@ -156,14 +171,15 @@
   /* ---------- reduced motion: статичний кадр ---------- */
   function staticFrame() {
     root.classList.add('is-static');
-    Object.assign(state, { lambda: -64, phi: -40, markers: 1 });
+    if (HS.textFill) HS.textFill(title);   // reduced → одразу 100 %
+    Object.assign(state, { lambda: -30, phi: -22, markers: 1 });
     measure();
   }
 
   /* ---------- старт ---------- */
   HS.loadTopo('assets/data/land-110m.json').then((topo) => {
     land = topojson.feature(topo, topo.objects.land);
-    drawn = ''; requestDraw();
+    drawn = ''; draw();
   }).catch((err) => console.warn('globe: land data failed', err));
 
   if (HS.reduced) {
@@ -174,6 +190,10 @@
 
   measure();
   buildTimeline();
+  // цикл інерції працює лише поки секція поблизу екрана
+  new IntersectionObserver(([en]) => { active = en.isIntersecting; }, { rootMargin: '200px 0px' }).observe(root.closest('.pin-spacer') || root);
+  gsap.ticker.add(tick);
+
   // Перераховуємо лише при зміні ширини (iOS змінює висоту при скролі через адресний рядок)
   let rT, lastW = innerWidth;
   addEventListener('resize', () => {

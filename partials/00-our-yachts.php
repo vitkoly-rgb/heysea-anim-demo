@@ -13,7 +13,7 @@
  */
 $oy_block = [
     'eyebrow' => 'Our yachts',
-    // line parts: [text, italic?, fills-on-scroll?]
+    // line parts: [text, italic?, (unused)] — the whole title fills letter by letter (HS.textFill)
     'lines' => [
         [['Distinctive', true, false], [' by design.', false, false]],
         [['Crafted ', false, false], ['with purpose.', true, true]],
@@ -44,6 +44,10 @@ $oy_stream = [
 ];
 $e = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 ?>
+<?php // shared text-fill helper (guarded against double include; other sections may load it too)
+$tf_v = static fn($rel) => $rel . (is_file(__DIR__ . '/../' . $rel) ? '?v=' . filemtime(__DIR__ . '/../' . $rel) : ''); ?>
+<link rel="stylesheet" href="<?= $tf_v('assets/css/text-fill.css') ?>">
+<script src="<?= $tf_v('assets/js/text-fill.js') ?>"></script>
 <section id="our-yachts" class="demo-sec oy" aria-labelledby="oy-title">
   <span class="demo-label">00 · Our yachts — depth fly-through</span>
   <div class="oy__stage">
@@ -54,7 +58,7 @@ $e = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
            data-o="<?= (float) $p['o'] ?>" data-m="<?= $p['m'] ? 1 : 0 ?>">
       <?php endforeach; ?>
       <?php foreach ($oy_stream as $p): ?>
-      <img class="oy__ph oy__ph--stream" src="<?= $e($oy_dir . $p['img']) ?>" alt="" decoding="async" loading="lazy"
+      <img class="oy__ph oy__ph--stream" src="<?= $e($oy_dir . $p['img']) ?>" alt="" decoding="async"
            data-dx="<?= (int) $p['dx'] ?>" data-dy="<?= (int) $p['dy'] ?>" data-w="<?= (int) $p['w'] ?>" data-h="<?= (int) $p['h'] ?>"
            data-z="<?= (float) $p['z'] ?>" data-m="<?= $p['m'] ? 1 : 0 ?>">
       <?php endforeach; ?>
@@ -63,7 +67,7 @@ $e = static fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
       <p class="oy__eyebrow"><?= $e($oy_block['eyebrow']) ?></p>
       <h2 class="oy__title" id="oy-title">
         <?php foreach ($oy_block['lines'] as $line): ?>
-        <span class="oy__line"><?php foreach ($line as [$txt, $italic, $fill]): ?><span class="<?= $italic ? 'oy__it' : '' ?><?= $fill ? ' oy__fill' : '' ?>"><?= $e($txt) ?></span><?php endforeach; ?></span>
+        <span class="oy__line"><?php foreach ($line as [$txt, $italic, $fill]): ?><span class="<?= $italic ? 'oy__it' : '' ?>"><?= $e($txt) ?></span><?php endforeach; ?></span>
         <?php endforeach; ?>
       </h2>
     </div>

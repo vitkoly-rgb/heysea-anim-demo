@@ -17,7 +17,6 @@
 .oy__title { margin: 0; font: 400 clamp(30px, 2.95vw, 44px)/1.22 var(--font); letter-spacing: -.01em; color: var(--oy-ink); }
 .oy__line { display: block; }
 .oy__it { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: 0; }
-.oy__fill .char { color: var(--oy-grey); }
 
 @media (max-width: 767px) {
   .oy__title { font-size: clamp(28px, 8.4vw, 36px); }

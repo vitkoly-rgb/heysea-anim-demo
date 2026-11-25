@@ -1,8 +1,9 @@
 /* ===== 01 · Series slider + water cursor ===== */
-.sc { background: #000; color: #fff; }
+.sc { --sc-pad: clamp(16px, 4vw, 64px); --sc-bottom: clamp(28px, 6vh, 72px); background: #000; color: #fff; }
 .sc .demo-label { z-index: 20; }
+.sc__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
-/* Default (no JS / reduced motion): panels simply stack, one viewport each. */
+/* Default (no JS / reduced motion): panels simply stack, one viewport each, each with its own copy. */
 .sc__stage { position: relative; }
 .sc__panel { position: relative; height: 100vh; height: 100svh; overflow: hidden; background: #000; }
 
@@ -16,26 +17,54 @@
 .sc__media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.55)); pointer-events: none; }
 .sc__shade { position: absolute; inset: 0; background: #000; opacity: 0; z-index: 1; }
 
-.sc__copy { position: absolute; left: clamp(16px, 4vw, 64px); right: clamp(16px, 4vw, 64px); bottom: clamp(28px, 6vh, 72px); z-index: 2; max-width: 980px; }
-.sc__count { margin: 0 0 12px; font: 500 12px/1 var(--font); letter-spacing: .14em; opacity: .75; }
-.sc__title { margin: 0; font: italic 400 clamp(48px, 8.5vw, 132px)/.95 var(--serif); letter-spacing: -.01em; }
-.sc__title .line { overflow: hidden; padding-bottom: .08em; }
-.sc__text { margin: 16px 0 0; max-width: 440px; font-size: 15px; line-height: 1.5; opacity: .85; }
-.sc__cta { display: inline-flex; gap: 8px; margin-top: 18px; color: #fff; font: 600 12px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.5); padding-bottom: 6px; }
-.sc__cta:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+/* Title type (shared by panel copy and HUD): one line, sized so "Bespoke Superyachts" fits */
+.sc__title, .sc__mask--title { font: italic 400 clamp(30px, 7.6vw, 124px)/1.08 var(--serif); letter-spacing: -.01em; white-space: nowrap; }
+.sc__text, .sc__hud-text { font-size: 15px; line-height: 1.5; max-width: 440px; }
 
-/* Touch badge (bottom-right) */
-.sc__badge { position: absolute; right: 16px; bottom: 24px; z-index: 6; display: none; align-items: center; gap: 10px; color: #fff; font: 500 12px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; pointer-events: none; }
+.sc__copy { position: absolute; left: var(--sc-pad); right: var(--sc-pad); bottom: var(--sc-bottom); z-index: 2; }
+.sc__title { margin: 0; }
+.sc__text { margin: 16px 0 0; opacity: .85; }
+/* pinned: per-panel copy stays for screen readers only */
+.sc--pinned .sc__copy { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+/* ----- Fixed HUD (pinned mode only) ----- */
+.sc__hud { display: none; }
+.sc--pinned .sc__hud { display: block; position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.sc__hud-copy { position: absolute; left: var(--sc-pad); right: calc(var(--sc-pad) + 160px); bottom: var(--sc-bottom); }
+/* masks: all items stacked in one grid cell, overflow clipped → content flips inside a static box */
+.sc__mask { display: grid; overflow: hidden; }
+.sc__mask > * { grid-area: 1 / 1; margin: 0; will-change: transform; }
+.sc__mask--title { padding: 0 .12em .06em 0; margin-left: -.02em; } /* room for italic overhang + descenders */
+.sc__mask--text { margin-top: 16px; }
+.sc__hud-text { opacity: .85; }
+
+.sc__nav { position: absolute; right: var(--sc-pad); bottom: var(--sc-bottom); display: flex; flex-direction: column; align-items: flex-end; gap: 16px; pointer-events: auto; }
+.sc__counter { margin: 0; display: flex; align-items: baseline; gap: 8px; font: 500 13px/1 var(--font); letter-spacing: .14em; }
+.sc__mask--num { display: inline-grid; height: 1em; font-size: 28px; letter-spacing: .02em; line-height: 1; }
+.sc__counter-total { opacity: .6; }
+.sc__ticks { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; }
+.sc__tick { appearance: none; border: 0; background: none; padding: 10px 0; width: 36px; cursor: pointer; }
+.sc__tick::before { content: ""; display: block; height: 2px; background: rgba(255,255,255,.35); transition: background .3s; }
+.sc__tick.is-active::before, .sc__tick:hover::before { background: #fff; }
+.sc__tick:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* Touch badge */
+.sc__badge { position: absolute; right: var(--sc-pad); top: 84px; z-index: 6; display: none; align-items: center; gap: 10px; color: #fff; font: 500 12px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; pointer-events: none; }
 @media (hover: none), (pointer: coarse) { .sc__badge { display: inline-flex; } }
+
+@media (max-width: 767px) {
+  .sc__hud-copy { right: var(--sc-pad); bottom: calc(var(--sc-bottom) + 64px); }
+  .sc__nav { flex-direction: row-reverse; align-items: center; left: var(--sc-pad); justify-content: space-between; }
+  .sc__text, .sc__hud-text { font-size: 14px; }
+}
 
 /* ----- Custom cursor (fine pointers only) ----- */
 .sc-cursor { position: fixed; left: 0; top: 0; z-index: 900; display: none; align-items: center; gap: 12px; pointer-events: none; opacity: 0; transition: opacity .25s ease; will-change: transform; }
-.sc-cursor__water { width: 64px; height: 64px; filter: drop-shadow(0 0 6px rgba(0,0,0,.28)); } /* keeps the white ring readable over bright footage */
+.sc-cursor__water { width: 64px; height: 64px; }
 .sc-cursor__label { color: #fff; font: 500 14px/1 var(--font); letter-spacing: .06em; text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,.25); }
 .sc-cursor.is-visible { opacity: 1; }
 @media (hover: hover) and (pointer: fine) {
   .sc-cursor { display: flex; }
   .sc--cursor .sc__stage, .sc--cursor .sc__stage * { cursor: none; }
-  /* keep the real cursor over interactive text so links stay obvious */
-  .sc--cursor .sc__cta { cursor: pointer; }
+  .sc--cursor .sc__nav, .sc--cursor .sc__nav * { cursor: pointer; } /* real cursor over the navigation */
 }

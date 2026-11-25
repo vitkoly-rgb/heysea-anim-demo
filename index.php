@@ -22,6 +22,7 @@ function asset_v($rel) { $p = __DIR__ . '/' . $rel; return file_exists($p) ? $re
 <title>HeySea — animation demos</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="<?= asset_v('assets/css/base.css') ?>">
+<link rel="stylesheet" href="<?= asset_v('assets/css/text-fill.css') ?>">
 <?php foreach ($sections as $s): if ($css = asset_v("assets/css/{$s['slug']}.css")): ?>
 <link rel="stylesheet" href="<?= $css ?>">
 <?php endif; endforeach; ?>
@@ -48,6 +49,7 @@ function asset_v($rel) { $p = __DIR__ . '/' . $rel; return file_exists($p) ? $re
 <script src="vendor/d3-geo.min.js"></script>
 <script src="vendor/topojson-client.min.js"></script>
 <script src="<?= asset_v('assets/js/base.js') ?>"></script>
+<script src="<?= asset_v('assets/js/text-fill.js') ?>"></script>
 <?php foreach ($sections as $s): if ($js = asset_v("assets/js/{$s['slug']}.js")): ?>
 <script src="<?= $js ?>"></script>
 <?php endif; endforeach; ?>
