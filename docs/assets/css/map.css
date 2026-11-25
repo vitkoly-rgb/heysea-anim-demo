@@ -61,11 +61,11 @@
 /* ---- Картки-слайдер (Figma «Global Network»: ряд від лівого краю контейнера, ~3.5 картки, остання обрізана краєм) ----
    --padl (лівий край контейнера) і --cw (ширина картки) рахує JS: cw = (ширина − padl − 3·gap) / 3.5 на десктопі.
    Безкінечна петля: JS дублює картки, трек (x) рухає GSAP на крок «картка + gap»; активна завжди перша в ряду.
-   Ліворуч від контейнера ряд обрізаний (clip-path), щоб попередня картка не визирала в полі. */
-.hsmap__cards { --padl: 80px; --cw: 382px; --gap: 8px; position: relative; z-index: 3; margin-top: -170px; padding: 0; pointer-events: none; outline: none; touch-action: pan-y; clip-path: inset(-80px -80px -80px calc(var(--padl) - var(--gap) + 1px)); }
+   Ліворуч ряд не обрізаний: картка виїжджає за край екрана (розчиняється в кінці кроку, JS applyX). */
+.hsmap__cards { --padl: 80px; --cw: 382px; --gap: 8px; position: relative; z-index: 3; margin-top: -170px; padding: 0; pointer-events: none; outline: none; touch-action: pan-y; }
 .hsmap__cards:focus-visible .hsmap__card.is-active { outline: 2px solid var(--navy, #0c2b50); outline-offset: 3px; }
-.hsmap__track { display: flex; align-items: flex-end; gap: var(--gap); width: max-content; padding: 40px 0 6px var(--padl); will-change: transform; }
-.hsmap__card { position: relative; flex: 0 0 var(--cw); width: var(--cw); box-sizing: border-box; min-height: 252px; display: flex; flex-direction: column; padding: 26px 26px 24px; background: var(--card); color: var(--ink); border: 1px solid rgba(9, 49, 85, .08); border-radius: 4px; pointer-events: auto; cursor: pointer; user-select: none; -webkit-user-select: none; transition: background-color .5s ease, color .5s ease, border-color .5s, box-shadow .5s; }
+.hsmap__track { display: flex; align-items: flex-end; height: var(--h-act, auto); gap: var(--gap); width: max-content; padding: 40px 0 6px var(--padl); will-change: transform; }
+.hsmap__card { position: relative; flex: 0 0 var(--cw); width: var(--cw); box-sizing: border-box; min-height: 252px; height: var(--h-in, auto); display: flex; flex-direction: column; padding: 26px 26px 24px; background: var(--card); color: var(--ink); border: 1px solid rgba(9, 49, 85, .08); border-radius: 4px; pointer-events: auto; cursor: pointer; user-select: none; -webkit-user-select: none; transition: background-color .5s ease, color .5s ease, border-color .5s, box-shadow .5s, height .6s cubic-bezier(.65, 0, .35, 1); }
 .hsmap__card:not(.is-active):hover { box-shadow: 0 12px 30px -18px rgba(13, 27, 42, .3); }
 .hsmap__card-kicker { margin: 0 0 8px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); transition: color .5s; }
 .hsmap__card-city { margin: 0 0 22px; font: italic 400 clamp(26px, 2vw, 32px)/1.05 var(--serif); letter-spacing: -.01em; }
@@ -83,7 +83,7 @@
 .hsmap__card-cta a { display: inline-flex; align-items: center; gap: 10px; margin-top: 24px; color: inherit; text-decoration: none; font-size: 15px; }
 .hsmap__card-cta svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; transition: transform .2s; }
 .hsmap__card-cta a:hover svg { transform: translateX(3px); }
-.hsmap__card.is-active { background: var(--card-ink); color: #fff; border-color: var(--card-ink); cursor: default; box-shadow: 0 22px 44px -22px rgba(0, 0, 0, .45); }
+.hsmap__card.is-active { height: var(--h-act, auto); background: var(--card-ink); color: #fff; border-color: var(--card-ink); cursor: default; box-shadow: 0 22px 44px -22px rgba(0, 0, 0, .45); }
 .hsmap__card.is-active .hsmap__card-kicker, .hsmap__card.is-active .hsmap__card-info dt { color: rgba(255, 255, 255, .55); }
 .hsmap__card.is-active .hsmap__card-info dd { color: rgba(255, 255, 255, .9); }
 .hsmap__card.is-active .hsmap__card-cta { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition: grid-template-rows .6s cubic-bezier(.65, 0, .35, 1), opacity .4s .25s, visibility 0s; }
@@ -107,3 +107,8 @@
   .hsmap__step, .hsmap__step i::after, .hsmap__card, .hsmap__card-cta { transition: none !important; }
   .hsmap__pin.is-active .hsmap__pin-dot::after { animation: none; }
 }
+
+/* вимір природної висоти карток (JS measureHeights) — без фіксованої висоти й без анімацій */
+.hsmap__cards.is-measuring .hsmap__card { height: auto !important; transition: none !important; }
+.hsmap__cards.is-measuring .hsmap__card-cta { transition: none !important; }
+.hsmap__cards.is-measuring .hsmap__track { height: auto !important; }

@@ -136,7 +136,17 @@
    Джерело правди — `active`: go() → slideBy(delta); vTarget ≡ active (mod N). */
   let step = 1, vpos = 0, vTarget = 0, slideTw = null;
   const setX = gsap.quickSetter(track, 'x', 'px');
-  const applyX = () => setX(-(BASE + vpos) * step);
+  // Ліворуч ряд не обрізаємо: картка, що йде назад, виїжджає за край екрана й лише в самому кінці
+  // (останні 25 % кроку) розчиняється, щоб у лівому полі контейнера не стирчав її край.
+  const cardOp = cards.map(() => 1);
+  function applyX() {
+    setX(-(BASE + vpos) * step);
+    for (let i = 0; i < cards.length; i++) {
+      const sl = i - (BASE + vpos);                                    // позиція слоту: 0 = активна, <0 = ліворуч
+      const op = sl >= -0.75 ? 1 : Math.max(0, (sl + 1) / 0.25);
+      if (op !== cardOp[i]) { cardOp[i] = op; cards[i].style.opacity = op === 1 ? '' : op.toFixed(3); }
+    }
+  }
   const visibleCards = () => (innerWidth >= 1100 ? 3.5 : innerWidth > 760 ? 2.4 : 1.22);
   function layoutSlider() {
     const vw = cardList.clientWidth;
@@ -147,9 +157,27 @@
     cardList.style.setProperty('--padl', padl + 'px');
     cardList.style.setProperty('--cw', cw + 'px');
     step = cw + gap;
+    measureHeights();
     slideTw && slideTw.kill();
     vpos = vTarget = active; applyX();
   }
+  /** Без «скачка»: усі неактивні картки однакової висоти (найвища з неактивних), активна — найвища з активних.
+   *  Інакше висота ряду залежить від довжини адреси активного офісу, і ряд та все під ним підстрибують. */
+  function measureHeights() {
+    const real = cards.filter((c) => !c.classList.contains('is-clone'));
+    cardList.classList.add('is-measuring');
+    let hi = 0, ha = 0;
+    real.forEach((c) => {
+      const was = c.classList.contains('is-active');
+      c.classList.remove('is-active'); hi = Math.max(hi, c.offsetHeight);
+      c.classList.add('is-active');    ha = Math.max(ha, c.offsetHeight);
+      c.classList.toggle('is-active', was);
+    });
+    cardList.classList.remove('is-measuring');
+    cardList.style.setProperty('--h-in', Math.ceil(hi) + 'px');
+    cardList.style.setProperty('--h-act', Math.ceil(Math.max(ha, hi)) + 'px');
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => measureHeights());
   /** Зсуває vpos і vTarget на кратне N так, щоб vpos був у [0, N) — без видимої зміни */
   function normalize() {
     const k = Math.floor(vpos / N) * N;
