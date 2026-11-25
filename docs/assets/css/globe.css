@@ -31,7 +31,7 @@
 /* Низ планети розчиняється у navy у фінальному кадрі (дешевше за mask — лише opacity) */
 .globe__fade { position: absolute; left: 0; right: 0; bottom: 0; height: 58vh; z-index: 2; pointer-events: none; opacity: 0; background: linear-gradient(180deg, rgba(12, 43, 80, 0), var(--g-bg) 62%); }
 
-.globe__stats { position: absolute; left: 0; right: 0; top: 50%; translate: 0 -50%; z-index: 3; display: flex; justify-content: center; gap: clamp(32px, 9vw, 140px); margin: 0; text-align: center; opacity: 0; visibility: hidden; }
+.globe__stats { position: absolute; left: 0; right: 0; top: 50%; translate: 0 -50%; z-index: 3; display: flex; justify-content: center; gap: clamp(32px, 9vw, 140px); margin: 0 auto; text-align: center; opacity: 0; visibility: hidden; }
 .globe-stat { min-width: 120px; }
 .globe-stat__value { font-family: var(--serif); font-size: clamp(36px, 4vw, 56px); font-weight: 400; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
 .globe-stat__label { margin: 10px 0 0; font-size: 12px; color: var(--g-muted); }

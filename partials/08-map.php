@@ -94,8 +94,8 @@ $hsmapIcon = [
     </div>
   </div>
 
-  <!-- Слайдер карток: активна в фокусі (по центру), сусідні виглядають з боків. Один індекс з таймером/пагінацією/пінами.
-       Drag/swipe (pointer events), клік по сусідній — активує, ←/→ коли фокус у слайдері. -->
+  <!-- Слайдер карток (Figma): ряд від лівого краю контейнера, ~3.5 картки (мобільний ~1.2), активна — перша; безкінечна петля
+       (JS дублює картки). Один індекс з таймером/пагінацією/пінами. Drag/swipe, клік по сусідній — активує, ←/→ у фокусі. -->
   <div class="hsmap__cards" role="region" aria-roledescription="carousel" aria-label="Office details" tabindex="0">
     <div class="hsmap__track">
       <?php foreach ($hsmap['offices'] as $i => $o): $on = $i === 0; ?>
@@ -114,8 +114,8 @@ $hsmapIcon = [
             <dd><a href="mailto:<?= $e($o['email']) ?>" draggable="false"<?= $on ? '' : ' tabindex="-1"' ?>><?= $e($o['email']) ?></a></dd>
           </div>
         </dl>
-        <!-- «Contact us» є в усіх картках (однакова висота), але видимий/фокусний лише в активній -->
-        <div class="hsmap__card-cta"><a href="<?= $e($hsmap['contact']['href']) ?>" draggable="false"<?= $on ? '' : ' tabindex="-1"' ?>><?= $e($hsmap['contact']['label']) ?><?= $hsmapIcon['chev'] ?></a></div>
+        <!-- «Contact us» розкривається лише в активній картці (вона підростає вгору) -->
+        <div class="hsmap__card-cta"><div><a href="<?= $e($hsmap['contact']['href']) ?>" draggable="false"<?= $on ? '' : ' tabindex="-1"' ?>><?= $e($hsmap['contact']['label']) ?><?= $hsmapIcon['chev'] ?></a></div></div>
       </article>
       <?php endforeach; ?>
     </div>

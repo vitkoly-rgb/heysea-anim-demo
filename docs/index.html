@@ -12,11 +12,11 @@
 <link rel="stylesheet" href="assets/css/series-cursor.css?v=1795636230">
 <link rel="stylesheet" href="assets/css/before-after.css?v=1794562637">
 <link rel="stylesheet" href="assets/css/timeline.css?v=1795637229">
-<link rel="stylesheet" href="assets/css/globe.css?v=1795643581">
+<link rel="stylesheet" href="assets/css/globe.css?v=1795644442">
 <link rel="stylesheet" href="assets/css/book.css?v=1795643953">
 <link rel="stylesheet" href="assets/css/cta-orbits.css?v=1795636548">
 <link rel="stylesheet" href="assets/css/wave-steps.css?v=1795636453">
-<link rel="stylesheet" href="assets/css/map.css?v=1795644082">
+<link rel="stylesheet" href="assets/css/map.css?v=1795644730">
 <link rel="stylesheet" href="assets/css/qr.css?v=1794569119">
 </head>
 <body>
@@ -728,8 +728,8 @@
           </div>
   </div>
 
-  <!-- Слайдер карток: активна в фокусі (по центру), сусідні виглядають з боків. Один індекс з таймером/пагінацією/пінами.
-       Drag/swipe (pointer events), клік по сусідній — активує, ←/→ коли фокус у слайдері. -->
+  <!-- Слайдер карток (Figma): ряд від лівого краю контейнера, ~3.5 картки (мобільний ~1.2), активна — перша; безкінечна петля
+       (JS дублює картки). Один індекс з таймером/пагінацією/пінами. Drag/swipe, клік по сусідній — активує, ←/→ у фокусі. -->
   <div class="hsmap__cards" role="region" aria-roledescription="carousel" aria-label="Office details" tabindex="0">
     <div class="hsmap__track">
             <article class="hsmap__card is-active" data-i="0" aria-roledescription="slide" aria-label="1 of 4">
@@ -747,8 +747,8 @@
             <dd><a href="mailto:info@heysea.com" draggable="false">info@heysea.com</a></dd>
           </div>
         </dl>
-        <!-- «Contact us» є в усіх картках (однакова висота), але видимий/фокусний лише в активній -->
-        <div class="hsmap__card-cta"><a href="#contact" draggable="false">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div>
+        <!-- «Contact us» розкривається лише в активній картці (вона підростає вгору) -->
+        <div class="hsmap__card-cta"><div><a href="#contact" draggable="false">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div></div>
       </article>
             <article class="hsmap__card" data-i="1" aria-roledescription="slide" aria-label="2 of 4">
         <p class="hsmap__card-kicker">HeySea Europe</p>
@@ -765,8 +765,8 @@
             <dd><a href="mailto:sales@heyseayachts.eu" draggable="false" tabindex="-1">sales@heyseayachts.eu</a></dd>
           </div>
         </dl>
-        <!-- «Contact us» є в усіх картках (однакова висота), але видимий/фокусний лише в активній -->
-        <div class="hsmap__card-cta"><a href="#contact" draggable="false" tabindex="-1">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div>
+        <!-- «Contact us» розкривається лише в активній картці (вона підростає вгору) -->
+        <div class="hsmap__card-cta"><div><a href="#contact" draggable="false" tabindex="-1">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div></div>
       </article>
             <article class="hsmap__card" data-i="2" aria-roledescription="slide" aria-label="3 of 4">
         <p class="hsmap__card-kicker">HeySea America</p>
@@ -783,8 +783,8 @@
             <dd><a href="mailto:chris@heysea.com" draggable="false" tabindex="-1">chris@heysea.com</a></dd>
           </div>
         </dl>
-        <!-- «Contact us» є в усіх картках (однакова висота), але видимий/фокусний лише в активній -->
-        <div class="hsmap__card-cta"><a href="#contact" draggable="false" tabindex="-1">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div>
+        <!-- «Contact us» розкривається лише в активній картці (вона підростає вгору) -->
+        <div class="hsmap__card-cta"><div><a href="#contact" draggable="false" tabindex="-1">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div></div>
       </article>
             <article class="hsmap__card" data-i="3" aria-roledescription="slide" aria-label="4 of 4">
         <p class="hsmap__card-kicker">HeySea Europe &amp; Asia</p>
@@ -801,8 +801,8 @@
             <dd><a href="mailto:info@heyseaturkiye.com" draggable="false" tabindex="-1">info@heyseaturkiye.com</a></dd>
           </div>
         </dl>
-        <!-- «Contact us» є в усіх картках (однакова висота), але видимий/фокусний лише в активній -->
-        <div class="hsmap__card-cta"><a href="#contact" draggable="false" tabindex="-1">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div>
+        <!-- «Contact us» розкривається лише в активній картці (вона підростає вгору) -->
+        <div class="hsmap__card-cta"><div><a href="#contact" draggable="false" tabindex="-1">Contact us<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a></div></div>
       </article>
           </div>
   </div>
@@ -892,7 +892,7 @@
 <script src="assets/js/book.js?v=1795643953"></script>
 <script src="assets/js/cta-orbits.js?v=1795643621"></script>
 <script src="assets/js/wave-steps.js?v=1795636487"></script>
-<script src="assets/js/map.js?v=1795643858"></script>
+<script src="assets/js/map.js?v=1795644620"></script>
 <script src="assets/js/qr.js?v=1795643717"></script>
 </body>
 </html>

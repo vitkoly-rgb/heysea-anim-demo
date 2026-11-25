@@ -26,9 +26,21 @@
   const hoverZones = [root.querySelector('.hsmap__map'), root.querySelector('.hsmap__cards')];
   const playBtn  = root.querySelector('.hsmap__btn--play');
   const pins     = [...root.querySelectorAll('.hsmap__pin')];
-  const cards    = [...root.querySelectorAll('.hsmap__card')];
   const cardList = root.querySelector('.hsmap__cards');   // в'юпорт слайдера
   const track    = root.querySelector('.hsmap__track');
+  /* Безкінечна петля: справжні картки (з PHP) — у 3-му з 5 наборів, решта — клони (aria-hidden, без фокусу).
+     Так праворуч від активної завжди є наступні, а ліворуч — попередні, і трек ніколи не «впирається». */
+  const N = offices.length, COPIES = 5, BASE = 2 * N;
+  const realCards = [...track.querySelectorAll('.hsmap__card')];
+  const mkClone = (c) => {
+    const k = c.cloneNode(true);
+    k.classList.add('is-clone'); k.setAttribute('aria-hidden', 'true');
+    k.querySelectorAll('a, button').forEach((el) => el.setAttribute('tabindex', '-1'));
+    return k;
+  };
+  for (let n = 0; n < 2; n++) track.prepend(...realCards.map(mkClone));
+  for (let n = 0; n < COPIES - 3; n++) track.append(...realCards.map(mkClone));
+  const cards = [...track.querySelectorAll('.hsmap__card')];   // усі (5·N), dataset.i — індекс офісу
 
   const WORLD_W = 1000;
   const proj = d3.geoEqualEarth();
@@ -73,12 +85,15 @@
   function measure() {
     W = mapEl.clientWidth || 1; H = mapEl.clientHeight || 1;
     if (pts.length) { Object.assign(cam, camFor(active)); render(); }
-    if (track) slideTo(active, false);
+    if (track) layoutSlider();
   }
 
   /* ---------- перемикання ---------- */
-  function go(i, { animate = true } = {}) {
-    active = (i + offices.length) % offices.length;
+  function go(i, { animate = true, delta } = {}) {
+    const next = ((i % N) + N) % N;
+    // напрямок для слайдера: явний (клік по картці/drag) або найкоротший шлях по колу (±1 для стрілок і таймера)
+    if (delta === undefined) { delta = (next - active + N) % N; if (delta > N / 2) delta -= N; }
+    active = next;
     nameEl.textContent = offices[active].label;
     // пагінація: активний сегмент розтягується (CSS transition flex-basis) і заповнюється таймером,
     // попередній стискається назад, його заливка плавно гасне (transition лише на неактивних)
@@ -88,13 +103,15 @@
       if (n !== active) st.style.setProperty('--fill', 0);
     });
     pins.forEach((p, n) => p.classList.toggle('is-active', n === active));
-    cards.forEach((c, n) => {
+    cards.forEach((c) => {
+      const n = +c.dataset.i;
       c.classList.toggle('is-active', n === active);
+      if (c.classList.contains('is-clone')) return;
       c.querySelector('.hsmap__card-btn').setAttribute('aria-pressed', String(n === active));
       // посилання (email, «Contact us») фокусуються лише в активній картці
       c.querySelectorAll('a').forEach((a) => (n === active ? a.removeAttribute('tabindex') : a.setAttribute('tabindex', '-1')));
     });
-    slideTo(active, animate);
+    slideBy(delta, animate);
 
     if (pts.length) {
       const to = camFor(active);
@@ -113,29 +130,49 @@
   }
 
   /* ---------- слайдер карток ----------
-   Трек зсувається так, щоб активна картка стала по центру в'юпорта (сусідні визирають з боків).
-   Джерело правди — `active`; слайдер лише відображає його (go → slideTo). */
-  const trackX = { v: 0 };
+   Ряд починається від лівого краю контейнера, видно ~3.5 картки (планшет ~2.4, мобільний ~1.22), активна — перша.
+   Позиція — «віртуальний» індекс першого слота vpos (DOM-картка BASE + vpos); x = −(BASE + vpos)·step.
+   Після кожного руху vpos нормалізується в [0, N) миттєвим зсувом на N·step — візуально те саме (клони ідентичні).
+   Джерело правди — `active`: go() → slideBy(delta); vTarget ≡ active (mod N). */
+  let step = 1, vpos = 0, vTarget = 0, slideTw = null;
   const setX = gsap.quickSetter(track, 'x', 'px');
-  let slideTw = null;
-  const xFor = (i) => {
-    const c = cards[i];
-    return Math.round(cardList.clientWidth / 2 - (c.offsetLeft + c.offsetWidth / 2));
-  };
-  const xMin = () => xFor(cards.length - 1), xMax = () => xFor(0);
-  function slideTo(i, animate = true) {
+  const applyX = () => setX(-(BASE + vpos) * step);
+  const visibleCards = () => (innerWidth >= 1100 ? 3.5 : innerWidth > 760 ? 2.4 : 1.22);
+  function layoutSlider() {
+    const vw = cardList.clientWidth;
+    const padl = Math.round((vw - Math.min(1280, vw - 32)) / 2);        // лівий край .container
+    const gap = parseFloat(getComputedStyle(cardList).getPropertyValue('--gap')) || 8;
+    const vis = visibleCards();
+    const cw = Math.floor((vw - padl - Math.floor(vis) * gap) / vis);
+    cardList.style.setProperty('--padl', padl + 'px');
+    cardList.style.setProperty('--cw', cw + 'px');
+    step = cw + gap;
     slideTw && slideTw.kill();
-    const x = xFor(i);
-    if (!animate || reduced) { trackX.v = x; setX(x); return; }
-    slideTw = gsap.to(trackX, { v: x, duration: 0.85, ease: 'power3.out', onUpdate: () => setX(trackX.v) });
+    vpos = vTarget = active; applyX();
+  }
+  /** Зсуває vpos і vTarget на кратне N так, щоб vpos був у [0, N) — без видимої зміни */
+  function normalize() {
+    const k = Math.floor(vpos / N) * N;
+    if (k) { vpos -= k; vTarget -= k; applyX(); }
+  }
+  function slideBy(delta, animate = true) {
+    slideTw && slideTw.kill();
+    normalize();
+    vTarget = Math.round(vTarget) + delta;
+    if (!animate || reduced) { vpos = vTarget; applyX(); normalize(); return; }
+    slideTw = gsap.to({ v: vpos }, {
+      v: vTarget, duration: 0.85, ease: 'power3.out',
+      onUpdate() { vpos = this.targets()[0].v; applyX(); },
+      onComplete: normalize,
+    });
   }
 
   // drag / swipe: pointer events (миша + touch + перо). touch-action: pan-y — вертикальний скрол сторінки лишається нативним.
-  const drag = { id: null, x0: 0, y0: 0, tx0: 0, moved: false, axis: null, lastX: 0, lastT: 0, vx: 0 };
+  const drag = { id: null, x0: 0, y0: 0, v0: 0, moved: false, axis: null, lastX: 0, lastT: 0, vx: 0 };
   let suppressClick = false;
   cardList.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || drag.id !== null) return;
-    Object.assign(drag, { id: e.pointerId, x0: e.clientX, y0: e.clientY, tx0: trackX.v, moved: false, axis: null, lastX: e.clientX, lastT: e.timeStamp, vx: 0 });
+    Object.assign(drag, { id: e.pointerId, x0: e.clientX, y0: e.clientY, moved: false, axis: null, lastX: e.clientX, lastT: e.timeStamp, vx: 0 });
     suppressClick = false;
   });
   cardList.addEventListener('pointermove', (e) => {
@@ -147,16 +184,15 @@
       if (drag.axis === 'y') { drag.id = null; return; }           // вертикальний жест — це скрол сторінки
       drag.moved = true;
       slideTw && slideTw.kill();
-      drag.tx0 = trackX.v; drag.x0 = e.clientX;
+      normalize();
+      drag.v0 = vpos; drag.x0 = e.clientX;
       cardList.setPointerCapture(e.pointerId);
       cardList.classList.add('is-dragging');
       setPaused('drag', true);
     }
-    let x = drag.tx0 + (e.clientX - drag.x0);
-    const lo = xMin(), hi = xMax();                                 // «гумка» за крайніми картками
-    if (x > hi) x = hi + (x - hi) * 0.35;
-    if (x < lo) x = lo + (x - lo) * 0.35;
-    trackX.v = x; setX(x);
+    // не далі ніж на N−1 карток від старту (клонів вистачає з запасом)
+    vpos = Math.max(drag.v0 - (N - 1), Math.min(drag.v0 + (N - 1), drag.v0 - (e.clientX - drag.x0) / step));
+    applyX();
     const dt = e.timeStamp - drag.lastT;
     if (dt > 0) drag.vx = 0.8 * ((e.clientX - drag.lastX) / dt) + 0.2 * drag.vx;
     drag.lastX = e.clientX; drag.lastT = e.timeStamp;
@@ -168,14 +204,12 @@
     suppressClick = true;                                           // клік після перетягування не активує картку
     cardList.classList.remove('is-dragging');
     setPaused('drag', false);
-    // найближча до центру картка + «кидок» (швидкий свайп гортає хоча б на одну)
-    const center = cardList.clientWidth / 2 - trackX.v;
-    let near = 0, best = Infinity;
-    cards.forEach((c, n) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - center); if (d < best) { best = d; near = n; } });
-    const dist = trackX.v - xFor(active);
-    if (near === active && (Math.abs(drag.vx) > 0.35 || Math.abs(dist) > 60)) near = active + (dist < 0 ? 1 : -1);
-    near = Math.max(0, Math.min(cards.length - 1, near));
-    near === active ? slideTo(active) : go(near);
+    // найближчий слот + «кидок»: швидкий або >15% картки свайп гортає хоча б на одну
+    let near = Math.round(vpos);
+    const d = vpos - vTarget;
+    if (near === vTarget && (Math.abs(drag.vx) > 0.35 || Math.abs(d) > 0.15)) near = vTarget + Math.sign(d || -drag.vx);
+    const delta = near - vTarget;
+    if (!delta) slideBy(0); else go(active + delta, { delta });
   }
   cardList.addEventListener('pointerup', endDrag);
   cardList.addEventListener('pointercancel', endDrag);
@@ -188,7 +222,7 @@
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(active - 1); }
     if (e.key === 'ArrowRight') { e.preventDefault(); go(active + 1); }
   });
-  // Tab на кнопку міста неактивної картки → вона стає активною (і виїжджає в центр)
+  // Tab на кнопку міста неактивної картки → вона стає активною (і виїжджає на перше місце)
   cardList.addEventListener('focusin', (e) => {
     const c = e.target.closest('.hsmap__card');
     if (c && e.target.matches(':focus-visible') && +c.dataset.i !== active) go(+c.dataset.i);
@@ -248,10 +282,11 @@
   playBtn.addEventListener('click', () => setPaused('user', !pauseReasons.has('user')));
   pins.forEach((p) => p.addEventListener('click', () => go(+p.dataset.i)));
   steps.forEach((st) => st.addEventListener('click', () => go(+st.dataset.i)));
-  cards.forEach((c) => c.addEventListener('click', (e) => {
-    if (+c.dataset.i === active) return;          // в активній посилання mailto:/«Contact us» працюють як звичайно
+  cards.forEach((c, dom) => c.addEventListener('click', (e) => {
+    const delta = dom - BASE - Math.round(vTarget);  // на скільки слотів праворуч від активної ця картка
+    if (!delta) return;                           // в активній посилання mailto:/«Contact us» працюють як звичайно
     e.preventDefault();                           // клік по сусідній (навіть по її посиланню) — спершу робить її активною
-    go(+c.dataset.i);
+    go(active + delta, { delta });
   }));
   root.querySelector('.hsmap__nav').addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(active - 1); }
